@@ -433,11 +433,9 @@
             let downloadUrl = '';
 
             if (os === 'windows') {
-                // Link do Drive fornecido
-                downloadUrl = 'https://drive.google.com/drive/folders/1GQZ3VBo2NrK_Z1YUz8_wnWis4rXayej3?hl=pt-br';
+                downloadUrl = 'https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/1.1.0/Meu.Dinheiro.Setup.1.1.0.exe';
             } else if (os === 'mac') {
-                // Link do Mac não foi fornecido na mensagem
-                downloadUrl = '#'; 
+                downloadUrl = 'https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/1.1.0/Meu.Dinheiro-1.1.0-universal.dmg'; 
             }
 
             // Simular um processamento para a tela de loading aparecer
@@ -452,7 +450,7 @@
                         overlay.classList.remove('active');
                     }, 2000);
                 } else {
-                    alert('O link de download para Mac ainda não foi fornecido. Por favor, adicione o link no código.');
+                    alert('O link de download ainda não está disponível.');
                     overlay.classList.remove('active');
                 }
             }, 1800);
