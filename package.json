@@ -39,7 +39,7 @@
     "files": [
       "main.js",
       "preload.js",
-      "index.html",
+      "app.html",
       "style.css",
       "app.js",
       "tailwind-output.css",

@@ -33,7 +33,7 @@ function createWindow() {
     show: false, // Mostrar apenas quando estiver pronto
   });
 
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile('app.html');
 
   // Mostra a janela quando o conteúdo estiver carregado (evita flash branco)
   mainWindow.once('ready-to-show', () => {
