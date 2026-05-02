@@ -1,7 +1,7 @@
 {
   "version": "2.1.1",
-  "windows": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.1.1/Meu.Dinheiro.Setup.2.1.1.exe",
-  "mac": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.1.1/Meu.Dinheiro-2.1.1-universal.dmg",
+  "windows": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.1.1/Meu-Dinheiro-Setup-2.1.1.exe",
+  "mac": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.1.1/Meu-Dinheiro-2.1.1-universal.dmg",
   "changelog": [
     "Sistema de notificação aprimorado com novos alertas informativos",
     "Correção definitiva do bug de travamento de scroll nos modais de Histórico, Cadastro e Perfil",
