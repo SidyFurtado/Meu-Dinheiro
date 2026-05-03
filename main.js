@@ -15,6 +15,11 @@ ipcMain.handle('abrir-url-externa', async (_event, url) => {
 ipcMain.handle('instalar-atualizacao', () => {
   autoUpdater.quitAndInstall();
 });
+
+// --- IPC: Baixar Atualização ---
+ipcMain.handle('baixar-atualizacao', () => {
+  autoUpdater.downloadUpdate();
+});
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1100,
@@ -28,8 +33,8 @@ function createWindow() {
       contextIsolation: true,
     },
     titleBarStyle: 'hiddenInset', // Estilo nativo no macOS
-    trafficLightPosition: { x: 15, y: 15 },
-    backgroundColor: '#f8fafc', // slate-50
+    trafficLightPosition: { x: 15, y: 18 },
+    backgroundColor: '#059669', // emerald-600 (cor do header)
     show: false, // Mostrar apenas quando estiver pronto
   });
 
@@ -45,7 +50,7 @@ function createWindow() {
   });
 
   // Configuração do autoUpdater
-  autoUpdater.autoDownload = true;
+  autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = true;
 
   autoUpdater.on('update-available', (info) => {

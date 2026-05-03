@@ -83,34 +83,32 @@ function redimensionarImagem(base64, maxSize, callback) {
   img.src = base64;
 }
 
-/** Renderiza barras de categoria (reutilizado em relatórios e tela principal) */
-function renderizarCategorias(arrayCategorias) {
-  if (arrayCategorias.length === 0) return '<p class="text-sm text-slate-400">Nenhum gasto registrado.</p>';
+/** Renderiza barras de progresso para categorias */
+function renderizarBarrasProgresso(arrayCategorias, tipo = 'gasto') {
+  const isInv = tipo === 'investimento';
+  const colors = isInv ? INVEST_COLORS : CATEGORY_COLORS;
+  const corTexto = isInv ? 'text-violet-500' : 'text-emerald-600';
+  const corPadrao = isInv ? 'bg-violet-400' : 'bg-slate-400';
+  
+  if (arrayCategorias.length === 0) return `<p class="text-sm text-slate-400">${isInv ? 'Nenhum investimento registrado.' : 'Nenhum gasto registrado.'}</p>`;
+  
   return arrayCategorias.map(c => `
     <div class="space-y-1">
       <div class="flex justify-between text-sm">
         <span class="font-medium text-slate-700">${escaparHTML(c.nome)}</span>
-        <span class="text-slate-500">${formatarMoeda(c.valor)} <span class="text-xs font-semibold ${c.nome === 'Investimentos' ? 'text-violet-500' : 'text-emerald-600'}">(${c.pct.toFixed(1)}%)</span></span>
+        <span class="text-slate-500">${formatarMoeda(c.valor)} <span class="text-xs font-semibold ${c.nome === 'Investimentos' ? 'text-violet-500' : corTexto}">(${c.pct.toFixed(1)}%)</span></span>
       </div>
       <div class="w-full bg-slate-100 rounded-full h-2.5">
-        <div class="h-2.5 rounded-full ${CATEGORY_COLORS[c.nome] || 'bg-slate-400'}" style="width: ${Math.max(c.pct, 2)}%"></div>
+        <div class="h-2.5 rounded-full ${colors[c.nome] || corPadrao}" style="width: ${Math.max(c.pct, 2)}%"></div>
       </div>
     </div>
   `).join('');
 }
 
-/** Filtra transações por ano e mês */
-function filtrarPorMes(ano, mes) {
-  return transacoes.filter(t => {
-    const [tAno, tMes] = t.date.split('-');
-    return parseInt(tAno) === ano && parseInt(tMes) - 1 === mes;
-  });
-}
-
-/** Filtra investimentos por ano e mês */
-function filtrarInvestimentosPorMes(ano, mes) {
-  return investimentos.filter(inv => {
-    const [iAno, iMes] = inv.date.split('-');
+/** Filtra uma lista de registros por ano e mês */
+function filtrarListaPorMes(lista, ano, mes) {
+  return lista.filter(item => {
+    const [iAno, iMes] = item.date.split('-');
     return parseInt(iAno) === ano && parseInt(iMes) - 1 === mes;
   });
 }
@@ -129,28 +127,14 @@ function calcularResumoInvestimentos(lista) {
   return { total, porCategoria, arrayCategorias };
 }
 
-/** Renderiza barras de categoria de investimento */
-function renderizarCategoriasInvestimento(arrayCategorias) {
-  if (arrayCategorias.length === 0) return '<p class="text-sm text-slate-400">Nenhum investimento registrado.</p>';
-  return arrayCategorias.map(c => `
-    <div class="space-y-1">
-      <div class="flex justify-between text-sm">
-        <span class="font-medium text-slate-700">${escaparHTML(c.nome)}</span>
-        <span class="text-slate-500">${formatarMoeda(c.valor)} <span class="text-xs text-violet-500 font-semibold">(${c.pct.toFixed(1)}%)</span></span>
-      </div>
-      <div class="w-full bg-slate-100 rounded-full h-2.5">
-        <div class="h-2.5 rounded-full ${INVEST_COLORS[c.nome] || 'bg-violet-400'}" style="width: ${Math.max(c.pct, 2)}%"></div>
-      </div>
-    </div>
-  `).join('');
-}
+
 
 // --- SISTEMA DE NOTIFICAÇÕES (TOAST) ---
 function mostrarToast(mensagem, tipo = 'success') {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
-  const bgClass = tipo === 'success' ? 'bg-emerald-600' : 'bg-rose-600';
-  const icone = tipo === 'success' ? 'check-circle' : 'alert-circle';
+  const bgClass = tipo === 'success' ? 'bg-emerald-600' : tipo === 'info' ? 'bg-blue-600' : 'bg-rose-600';
+  const icone = tipo === 'success' ? 'check-circle' : tipo === 'info' ? 'info' : 'alert-circle';
 
   toast.className = `${bgClass} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 w-max max-w-[90vw] toast-enter`;
   toast.innerHTML = `<i data-lucide="${icone}" class="w-6 h-6 shrink-0"></i><span class="font-medium">${escaparHTML(mensagem)}</span>`;
@@ -510,8 +494,8 @@ function atualizarTela() {
   const anoVisualizado = dataVisualizacao.getFullYear();
   document.getElementById('mes-ano-display').innerText = `${mesesNomes[mesVisualizado]} ${anoVisualizado}`;
 
-  const transacoesDoMes = filtrarPorMes(anoVisualizado, mesVisualizado);
-  const investimentosDoMes = filtrarInvestimentosPorMes(anoVisualizado, mesVisualizado);
+  const transacoesDoMes = filtrarListaPorMes(transacoes, anoVisualizado, mesVisualizado);
+  const investimentosDoMes = filtrarListaPorMes(investimentos, anoVisualizado, mesVisualizado);
   const resumo = calcularResumo(transacoesDoMes);
   const resumoInv = calcularResumoInvestimentos(investimentosDoMes);
 
@@ -575,7 +559,7 @@ function atualizarTela() {
   if (arrayCategoriasComInv.length === 0) {
     listaCategorias.innerHTML = `<p class="text-center text-slate-400 text-sm py-4">Nenhum gasto registrado neste mês.</p>`;
   } else {
-    listaCategorias.innerHTML = renderizarCategorias(arrayCategoriasComInv);
+    listaCategorias.innerHTML = renderizarBarrasProgresso(arrayCategoriasComInv, 'gasto');
   }
 
   // --- ATUALIZAR SEÇÃO DE INVESTIMENTOS ---
@@ -585,7 +569,7 @@ function atualizarTela() {
   if (resumoInv.arrayCategorias.length === 0) {
     invCategoriasEl.innerHTML = `<p class="text-center text-slate-400 text-sm py-4">Nenhum investimento registrado neste mês.</p>`;
   } else {
-    invCategoriasEl.innerHTML = renderizarCategoriasInvestimento(resumoInv.arrayCategorias);
+    invCategoriasEl.innerHTML = renderizarBarrasProgresso(resumoInv.arrayCategorias, 'investimento');
   }
 
   const listaInvHTML = document.getElementById('lista-investimentos');
@@ -719,7 +703,7 @@ window.gerarRelatorio = (anoStr, mes) => {
   let titulo;
 
   if (isMensal) {
-    transacoesFiltradas = filtrarPorMes(ano, mes);
+    transacoesFiltradas = filtrarListaPorMes(transacoes, ano, mes);
     titulo = `${mesesNomes[mes]}/${ano}`;
   } else {
     transacoesFiltradas = transacoes.filter(t => t.date.startsWith(anoStr));
@@ -742,7 +726,7 @@ window.gerarRelatorio = (anoStr, mes) => {
       <h4 class="font-bold text-slate-800">Resumo de ${titulo}</h4>
       <div class="w-16"></div>
     </div>
-    <div class="p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50">
+    <div class="p-6 space-y-6 bg-slate-50">
       ${btnVerContas}
       <div class="grid grid-cols-2 gap-4">
         <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
@@ -762,13 +746,15 @@ window.gerarRelatorio = (anoStr, mes) => {
         <h5 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
           <i data-lucide="pie-chart" class="w-4 h-4 text-slate-400"></i> ${isMensal ? 'Despesas do mês' : 'Maiores despesas do ano'}
         </h5>
-        <div class="space-y-4">${renderizarCategorias(resumo.arrayCategorias)}</div>
+        <div class="space-y-4">${renderizarBarrasProgresso(resumo.arrayCategorias, 'gasto')}</div>
       </div>
     </div>`;
 
   document.getElementById('view-pastas').classList.add('hidden');
   viewRelatorio.classList.remove('hidden');
   viewRelatorio.classList.add('flex');
+  // Garante que o conteúdo do relatório sempre começa do topo
+  if (viewRelatorio.parentElement) viewRelatorio.parentElement.scrollTop = 0;
   lucide.createIcons({ nodes: [viewRelatorio] });
 };
 
@@ -842,6 +828,12 @@ atualizarDadosPerfilHeader();
 carregarTransacoes();
 lucide.createIcons();
 
+// Detecta macOS e exibe espaço para o semáforo (botões de controle da janela)
+if (window.electronAPI && window.electronAPI.platform === 'darwin') {
+  const titlebarSpace = document.getElementById('macos-titlebar-space');
+  if (titlebarSpace) titlebarSpace.classList.remove('hidden');
+}
+
 // =============================================
 // SISTEMA DE ATUALIZAÇÃO AUTOMÁTICA
 // =============================================
@@ -867,11 +859,20 @@ function compararVersoes(a, b) {
 }
 
 /** Exibe o modal de atualização com animação de entrada */
-function exibirModalUpdate(versaoAtual, versaoNova, urlDownload) {
+function exibirModalUpdate(versaoAtual, versaoNova, urlDownload, changelog = []) {
   _urlDownloadAtual = urlDownload;
 
   document.getElementById('update-versao-atual').textContent = `v${versaoAtual}`;
   document.getElementById('update-versao-nova').textContent  = `v${versaoNova}`;
+
+  const containerChangelog = document.getElementById('update-changelog-container');
+  const listChangelog = document.getElementById('update-changelog-list');
+  if (changelog && changelog.length > 0 && containerChangelog) {
+    listChangelog.innerHTML = changelog.map(item => `<li>${escaparHTML(item)}</li>`).join('');
+    containerChangelog.classList.remove('hidden');
+  } else if (containerChangelog) {
+    containerChangelog.classList.add('hidden');
+  }
 
   const modal = document.getElementById('modal-update');
   const card  = document.getElementById('modal-update-card');
@@ -902,37 +903,37 @@ window.fecharModalUpdate = () => {
 
 /** Inicia o download do instalador via IPC (abre no navegador do sistema) */
 window.baixarAtualizacao = async () => {
-  if (!_urlDownloadAtual) return;
-
   const btn = document.getElementById('btn-baixar-update');
   btn.disabled = true;
   btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i><span>Iniciando download...</span>';
   lucide.createIcons({ nodes: [btn] });
 
-  // Usa o IPC do Electron (se disponível) ou fallback para window.open
-  if (window.electronAPI && window.electronAPI.abrirDownload) {
-    await window.electronAPI.abrirDownload(_urlDownloadAtual);
-  } else {
-    window.open(_urlDownloadAtual, '_blank');
+  // Se usar autoUpdater nativo do Electron
+  if (window.electronAPI && window.electronAPI.baixarAtualizacao) {
+    window.electronAPI.baixarAtualizacao();
+    mostrarToast('Baixando atualização em segundo plano...', 'info');
+    adicionarNotificacaoDownload(document.getElementById('update-versao-nova').textContent.replace('v', ''));
+    setTimeout(() => window.fecharModalUpdate(), 1000);
+  } else if (_urlDownloadAtual) {
+    if (window.electronAPI && window.electronAPI.abrirDownload) {
+      await window.electronAPI.abrirDownload(_urlDownloadAtual);
+    } else {
+      window.open(_urlDownloadAtual, '_blank');
+    }
+    setTimeout(() => {
+      window.fecharModalUpdate();
+      mostrarToast('Download iniciado! Instale após concluir.', 'success');
+    }, 1500);
   }
-
-  // Fecha o modal após 1.5s (download já foi iniciado no navegador externo)
-  setTimeout(() => {
-    window.fecharModalUpdate();
-    mostrarToast('Download iniciado! Instale após concluir.', 'success');
-  }, 1500);
 };
 
 /**
- * Verifica se há nova versão disponível consultando o version.json remoto.
- * Roda silenciosamente por padrão. Se manual=true, avisa se não achar atualização.
- */
-/**
- * Verifica se há nova versão (Modo manual - fallback)
+ * Verifica se há nova versão (Modo manual - fallback).
+ * O electron-updater em main.js cuida da verificação automática;
+ * aqui apenas exibe um toast informativo se acionado manualmente.
  */
 async function verificarAtualizacao(manual = false) {
   if (manual) mostrarToast('Buscando atualizações em segundo plano...', 'info');
-  // O main.js com electron-updater já cuida disso automaticamente.
 }
 
 // ==========================================
@@ -940,10 +941,20 @@ async function verificarAtualizacao(manual = false) {
 // ==========================================
 
 if (window.electronAPI && window.electronAPI.onUpdateAvailable) {
-  // Quando acha update, avisa que está baixando
-  window.electronAPI.onUpdateAvailable((version) => {
-    mostrarToast(`Nova versão ${version} encontrada! Baixando...`, 'info');
-    adicionarNotificacaoDownload(version);
+  // Quando acha update, busca o changelog e exibe o modal ANTES de baixar
+  window.electronAPI.onUpdateAvailable(async (version) => {
+    let changelog = [];
+    try {
+      const res = await fetch(UPDATE_JSON_URL + '?t=' + Date.now());
+      const data = await res.json();
+      if (data.changelog && Array.isArray(data.changelog)) {
+        changelog = data.changelog;
+      }
+    } catch (e) {
+      console.error("Erro ao buscar changelog:", e);
+    }
+    const currentVersion = window.electronAPI.version || '2.1.0';
+    exibirModalUpdate(currentVersion, version, null, changelog);
   });
 
   // Quando termina de baixar, pede pra instalar

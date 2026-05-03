@@ -8,6 +8,10 @@
 @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes slideDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
+@keyframes updateBounce {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50%       { transform: translateY(-6px) rotate(5deg); }
+}
 
 .fade-in { animation: fadeIn 0.2s ease-out forwards; }
 .zoom-in { animation: zoomIn 0.2s ease-out forwards; }
@@ -19,22 +23,92 @@
 
 /* --- Saldo card via data-attribute --- */
 #cartao-saldo { transition: background-color 0.3s ease; }
-#cartao-saldo[data-negativo="true"] { background-color: #e11d48; }
+#cartao-saldo[data-negativo="true"]  { background-color: #e11d48; }
 #cartao-saldo[data-negativo="false"] { background-color: #1e293b; }
 
 /* --- Modal tipo state via data-attribute --- */
-[data-tipo="income"] #modal-header { background-color: #059669; }
+[data-tipo="income"]  #modal-header { background-color: #059669; }
 [data-tipo="expense"] #modal-header { background-color: #e11d48; }
-[data-tipo="income"] #btn-salvar { background-color: #059669; }
-[data-tipo="income"] #btn-salvar:hover { background-color: #047857; }
+[data-tipo="income"]  #btn-salvar { background-color: #059669; }
+[data-tipo="income"]  #btn-salvar:hover { background-color: #047857; }
 [data-tipo="expense"] #btn-salvar { background-color: #e11d48; }
 [data-tipo="expense"] #btn-salvar:hover { background-color: #be123c; }
 
 [data-tipo="income"] #btn-tipo-entrada {
   background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); color: #059669;
 }
-[data-tipo="income"] #btn-tipo-saida { background-color: transparent; box-shadow: none; color: #64748b; }
-[data-tipo="expense"] #btn-tipo-saida {
+[data-tipo="income"]  #btn-tipo-saida   { background-color: transparent; box-shadow: none; color: #64748b; }
+[data-tipo="expense"] #btn-tipo-saida   {
   background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); color: #e11d48;
 }
 [data-tipo="expense"] #btn-tipo-entrada { background-color: transparent; box-shadow: none; color: #64748b; }
+
+/* =============================================
+   CORREÇÕES DE SCROLL — Bug fix crítico
+   ============================================= */
+
+/*
+ * No Electron, a BrowserWindow pode definir `overflow: hidden` implicitamente
+ * no html/body, travando o scroll da página inteira.
+ * Estas regras garantem que o conteúdo principal sempre role normalmente.
+ */
+html {
+  overflow-x: hidden;
+  overflow-y: scroll; /* 'scroll' (não 'auto') evita saltos de layout ao abrir modais */
+}
+
+body {
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/*
+ * Cabeçalhos de modal são flex-children dentro de um container flex-col.
+ * shrink-0 impede que eles encolham quando o conteúdo do form é grande,
+ * garantindo que o cabeçalho fixo fique sempre visível.
+ */
+#modal-historico  > div > div:first-child,
+#modal-perfil     > div > div:first-child,
+#modal-cadastro   > div > div:first-child,
+#modal-investimento > div > div:first-child {
+  flex-shrink: 0;
+}
+
+/*
+ * Toast tipo 'info' — cor azul hardcoded para não depender
+ * do Tailwind ter compilado a classe bg-blue-600.
+ */
+.bg-blue-600 { background-color: #2563eb !important; }
+
+/* =============================================
+   CORREÇÕES PARA macOS + ELECTRON
+   ==============================================
+   O Electron no macOS pode bloquear cliques em botões
+   quando o header tem -webkit-app-region: drag.
+   As regras abaixo garantem que todos elementos
+   interativos respondam normalmente ao clique.
+ */
+
+/* Remove drag region de todos os elementos interativos */
+button,
+a,
+input,
+select,
+textarea,
+label,
+[onclick],
+[role="button"] {
+  -webkit-app-region: no-drag;
+  cursor: pointer;
+}
+
+/* O header não é dragável para não bloquear cliques */
+header {
+  -webkit-app-region: no-drag;
+}
+
+/* Garante que elementos dentro de modais também funcionem */
+.modal-overlay,
+.modal-overlay * {
+  -webkit-app-region: no-drag;
+}

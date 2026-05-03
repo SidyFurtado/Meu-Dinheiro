@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meu Dinheiro — Controle Financeiro</title>
   <meta name="description" content="Organize suas finanças pessoais com facilidade. Controle receitas, despesas e acompanhe seus gastos por categoria.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://ui-avatars.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://sidyfurtado.github.io https://fonts.googleapis.com https://fonts.gstatic.com;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob: https://ui-avatars.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://sidyfurtado.github.io https://fonts.googleapis.com https://fonts.gstatic.com;">
 
   <!-- Tailwind CSS compilado (local, funciona offline) -->
   <link rel="stylesheet" href="tailwind-output.css">
@@ -13,7 +13,7 @@
   <!-- Estilos customizados -->
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="min-h-screen bg-slate-50 pb-20 font-sans text-slate-800">
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800">
 
   <!-- CONTAINER DE NOTIFICAÇÕES (TOASTS) -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
@@ -21,7 +21,9 @@
   <!-- APP PRINCIPAL -->
   <div id="app-container">
     <!-- CABEÇALHO -->
-    <header class="bg-emerald-600 text-white pt-8 pb-24 px-6 rounded-b-[40px] shadow-lg relative">
+    <header class="bg-emerald-600 text-white pt-10 pb-24 px-6 rounded-b-[40px] shadow-lg relative">
+      <!-- Espaço para os botões de controle do macOS (semáforo) -->
+      <div class="h-6 hidden" id="macos-titlebar-space"></div>
       <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-4">
           <!-- PERFIL DO USUÁRIO -->
@@ -186,8 +188,8 @@
 
     <!-- MODAL DO HISTÓRICO EM PASTAS -->
     <div id="modal-historico" role="dialog" aria-modal="true" aria-label="Histórico de Pastas" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
-      <div class="bg-slate-50 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl zoom-in max-h-[90vh] flex flex-col">
-        <div class="p-6 bg-slate-800 text-white flex justify-between items-center shrink-0">
+      <div class="bg-slate-50 rounded-3xl w-full max-w-lg shadow-2xl zoom-in max-h-[90vh] overflow-y-auto relative flex flex-col">
+        <div class="p-6 bg-slate-800 text-white flex justify-between items-center sticky top-0 z-10 shrink-0 shadow-sm">
           <h3 class="text-xl font-bold flex items-center gap-2">
             <i data-lucide="folder-search" class="w-5 h-5 text-emerald-400"></i> Histórico de Pastas
           </h3>
@@ -197,17 +199,17 @@
         </div>
 
         <!-- View Listagem de Pastas -->
-        <div id="view-pastas" class="p-6 overflow-y-auto space-y-4 flex-1"></div>
+        <div id="view-pastas" class="p-6 space-y-4"></div>
 
         <!-- View Relatório Anual/Mensal (Escondido por padrão) -->
-        <div id="view-relatorio" class="hidden flex-col h-full flex-1"></div>
+        <div id="view-relatorio" class="hidden flex-col"></div>
       </div>
     </div>
 
     <!-- MODAL DE CADASTRO / EDIÇÃO -->
     <div id="modal-cadastro" role="dialog" aria-modal="true" aria-labelledby="modal-title" data-tipo="expense" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
-      <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl zoom-in">
-        <div id="modal-header" class="p-6 text-white flex justify-between items-center bg-emerald-600">
+      <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
+        <div id="modal-header" class="p-6 text-white flex justify-between items-center bg-emerald-600 sticky top-0 z-10 shrink-0 shadow-sm transition-colors">
           <h3 id="modal-title" class="text-xl font-bold flex items-center gap-2">Adicionar Conta</h3>
           <button onclick="fecharModal()" class="text-white/80 hover:text-white bg-white/10 p-2 rounded-full transition-colors" aria-label="Fechar">
             <i data-lucide="x" class="w-5 h-5"></i>
@@ -262,8 +264,8 @@
 
     <!-- MODAL DE PERFIL -->
     <div id="modal-perfil" role="dialog" aria-modal="true" aria-label="Configurar Perfil" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
-      <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl zoom-in">
-        <div class="p-6 text-white flex justify-between items-center bg-slate-800">
+      <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
+        <div class="p-6 text-white flex justify-between items-center bg-slate-800 sticky top-0 z-10 shrink-0 shadow-sm">
           <h3 class="text-xl font-bold flex items-center gap-2">
             <i data-lucide="user-cog" class="w-5 h-5"></i> Configurar Perfil
           </h3>
@@ -336,8 +338,8 @@
 
     <!-- MODAL DE INVESTIMENTO -->
     <div id="modal-investimento" role="dialog" aria-modal="true" aria-labelledby="modal-inv-title" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
-      <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl zoom-in">
-        <div class="p-6 text-white flex justify-between items-center bg-gradient-to-r from-violet-600 to-indigo-600">
+      <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
+        <div class="p-6 text-white flex justify-between items-center bg-gradient-to-r from-violet-600 to-indigo-600 sticky top-0 z-10 shrink-0 shadow-sm transition-colors">
           <h3 id="modal-inv-title" class="text-xl font-bold flex items-center gap-2">
             <i data-lucide="trending-up" class="w-5 h-5"></i> Registrar Investimento
           </h3>
@@ -441,6 +443,14 @@
           Uma atualização com melhorias e novidades está pronta para você.
         </p>
 
+        <!-- Changelog (adicionado) -->
+        <div id="update-changelog-container" class="hidden bg-slate-50 rounded-xl p-4 border border-slate-100 max-h-[150px] overflow-y-auto">
+          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Novidades:</h4>
+          <ul id="update-changelog-list" class="space-y-2 text-sm text-slate-600 list-disc pl-4">
+            <!-- Changelog items inserted via JS -->
+          </ul>
+        </div>
+
         <!-- Botão de download -->
         <button id="btn-baixar-update" onclick="baixarAtualizacao()"
                 class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600
@@ -480,7 +490,7 @@
         </button>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-4 bg-slate-50" id="lista-notificacoes">
+      <div class="flex-1 overflow-y-auto p-4 bg-slate-50 min-h-0" id="lista-notificacoes">
         <!-- Estado vazio padrão -->
         <div id="notif-vazia" class="flex flex-col items-center justify-center h-full text-slate-400 gap-3 opacity-70">
           <i data-lucide="bell-off" class="w-12 h-12"></i>
@@ -490,13 +500,6 @@
     </div>
   </div>
 
-  <!-- Animação do ícone de foguete -->
-  <style>
-    @keyframes updateBounce {
-      0%, 100% { transform: translateY(0) rotate(-5deg); }
-      50%       { transform: translateY(-6px) rotate(5deg); }
-    }
-  </style>
 
   <!-- Lucide Icons (local) -->
   <script src="node_modules/lucide/dist/umd/lucide.min.js"></script>

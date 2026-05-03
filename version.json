@@ -1,11 +1,11 @@
 {
-  "version": "2.1.1",
-  "windows": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.1.1/Meu-Dinheiro-Setup-2.1.1.exe",
-  "mac": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.1.1/Meu-Dinheiro-2.1.1-universal.dmg",
+  "version": "2.1.2",
+  "windows": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.1.2/Meu-Dinheiro-Setup-2.1.2.exe",
+  "mac": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.1.2/Meu-Dinheiro-2.1.2-universal.dmg",
   "changelog": [
-    "Sistema de notificação aprimorado com novos alertas informativos",
-    "Correção definitiva do bug de travamento de scroll nos modais de Histórico, Cadastro e Perfil",
-    "Refatoração e otimização do código para maior fluidez e performance do aplicativo",
-    "Melhorias de compatibilidade na rolagem de conteúdo"
+    "Correção crítica para macOS: botões e interações restaurados",
+    "Ajuste de layout e espaçamento para melhor integração com a barra nativa do Mac",
+    "Melhoria no tempo de carregamento e remoção de flash branco ao iniciar",
+    "Correção de CSP para melhor segurança e compatibilidade com ícones"
   ]
 }
