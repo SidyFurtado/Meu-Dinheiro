@@ -88,6 +88,7 @@
             <i data-lucide="arrow-up-circle" class="w-6 h-6 text-emerald-500"></i>
           </div>
           <strong id="total-entradas" class="text-2xl font-bold text-slate-800">R$ 0,00</strong>
+          <span id="badge-sobra-anterior" class="hidden mt-1 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5 w-fit"></span>
         </div>
 
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between">
@@ -308,6 +309,23 @@
             </h4>
             <button type="button" onclick="verificarAtualizacao(true)" class="w-full bg-slate-50 text-slate-700 hover:bg-slate-100 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors border border-slate-200">
               <i data-lucide="download-cloud" class="w-4 h-4"></i> Buscar Atualizações
+            </button>
+          </div>
+
+          <!-- SOBRA AUTOMÁTICA -->
+          <div class="pt-5 border-t border-slate-100 mt-2">
+            <h4 class="text-sm font-bold text-slate-800 mb-1 flex items-center gap-2">
+              <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-500"></i> Sobra Automática
+            </h4>
+            <p class="text-xs text-slate-500 mb-4">Quando ativado, o valor positivo que sobrar de um mês será somado automaticamente às entradas do mês seguinte.</p>
+            <button type="button" onclick="toggleSobraAutomatica()" class="w-full flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 hover:bg-slate-100 transition-colors">
+              <span class="text-sm font-semibold text-slate-700">Transferir sobra para o próximo mês</span>
+              <div class="flex items-center gap-2">
+                <span id="toggle-sobra-label" class="text-xs font-bold text-slate-500">Ativado</span>
+                <div id="toggle-sobra-auto" class="relative w-11 h-6 rounded-full bg-emerald-500 transition-colors duration-300 cursor-pointer flex-shrink-0">
+                  <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300" style="transform: translateX(20px);"></span>
+                </div>
+              </div>
             </button>
           </div>
 

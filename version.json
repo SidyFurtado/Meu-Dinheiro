@@ -1,11 +1,10 @@
 {
-  "version": "2.1.2",
-  "windows": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.1.2/Meu-Dinheiro-Setup-2.1.2.exe",
-  "mac": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.1.2/Meu-Dinheiro-2.1.2-universal.dmg",
+  "version": "2.3.0",
+  "windows": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.3.0/Meu-Dinheiro-Setup-2.3.0.exe",
+  "mac": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.3.0/Meu-Dinheiro-2.3.0-universal.dmg",
   "changelog": [
-    "Correção crítica para macOS: botões e interações restaurados",
-    "Ajuste de layout e espaçamento para melhor integração com a barra nativa do Mac",
-    "Melhoria no tempo de carregamento e remoção de flash branco ao iniciar",
-    "Correção de CSP para melhor segurança e compatibilidade com ícones"
+    "Nova Funcionalidade: Sobra Automática! O saldo positivo do mês anterior agora é somado automaticamente nas entradas do mês atual.",
+    "Opção de ativar/desativar a sobra automática diretamente nas configurações do seu perfil.",
+    "Pequenas melhorias de interface e cálculo."
   ]
 }

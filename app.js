@@ -26,6 +26,9 @@ let avatarBase64Temporario = null;
 let idTransacaoEmEdicao = null;
 let idInvestimentoEmEdicao = null;
 
+// --- CONFIGURAÇÃO: SOBRA AUTOMÁTICA ---
+let sobraAutomaticaAtiva = JSON.parse(localStorage.getItem('sobraAutomatica') ?? 'true');
+
 const hoje = new Date();
 let dataVisualizacao = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
 
@@ -244,6 +247,7 @@ window.abrirModalPerfil = () => {
   const preview = document.getElementById('perfil-foto-preview');
   preview.src = meuPerfil.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(meuPerfil.nome || 'Usuário')}&background=cbd5e1&color=fff`;
   avatarBase64Temporario = null;
+  sincronizarToggleSobra();
   abrirModalGenerico('modal-perfil');
 };
 
@@ -274,6 +278,37 @@ document.getElementById('form-perfil').addEventListener('submit', (e) => {
   mostrarToast("Perfil atualizado com sucesso!");
   fecharModalPerfil();
 });
+
+// --- TOGGLE SOBRA AUTOMÁTICA ---
+window.toggleSobraAutomatica = () => {
+  sobraAutomaticaAtiva = !sobraAutomaticaAtiva;
+  localStorage.setItem('sobraAutomatica', JSON.stringify(sobraAutomaticaAtiva));
+  sincronizarToggleSobra();
+  atualizarTela();
+  mostrarToast(
+    sobraAutomaticaAtiva
+      ? 'Sobra automática ativada! 🎉'
+      : 'Sobra automática desativada.',
+    sobraAutomaticaAtiva ? 'success' : 'info'
+  );
+};
+
+function sincronizarToggleSobra() {
+  const toggle = document.getElementById('toggle-sobra-auto');
+  const label  = document.getElementById('toggle-sobra-label');
+  if (!toggle) return;
+  if (sobraAutomaticaAtiva) {
+    toggle.classList.add('bg-emerald-500');
+    toggle.classList.remove('bg-slate-300');
+    toggle.querySelector('span').style.transform = 'translateX(20px)';
+    if (label) label.textContent = 'Ativado';
+  } else {
+    toggle.classList.remove('bg-emerald-500');
+    toggle.classList.add('bg-slate-300');
+    toggle.querySelector('span').style.transform = 'translateX(0px)';
+    if (label) label.textContent = 'Desativado';
+  }
+}
 
 // --- LÓGICA DE SALVAR / EDITAR TRANSAÇÃO ---
 document.getElementById('form-transacao').addEventListener('submit', (e) => {
@@ -488,6 +523,23 @@ window.mudarMes = (delta) => {
   atualizarTela();
 };
 
+// --- SOBRA AUTOMÁTICA: Calcula o saldo positivo de um mês anterior ---
+function calcularSobraDoMes(ano, mes) {
+  const t = filtrarListaPorMes(transacoes, ano, mes);
+  const inv = filtrarListaPorMes(investimentos, ano, mes);
+  const r = calcularResumo(t);
+  const rInv = calcularResumoInvestimentos(inv);
+  // Não incluir sobra encadeada — apenas as transações reais do mês
+  const saldo = r.entradas - (r.saidas + rInv.total);
+  return saldo > 0 ? saldo : 0;
+}
+
+// Retorna a data do mês anterior em relação a (ano, mes)
+function mesAnterior(ano, mes) {
+  if (mes === 0) return { ano: ano - 1, mes: 11 };
+  return { ano, mes: mes - 1 };
+}
+
 // --- ATUALIZAR TELA (Cálculos e Renderização HTML) ---
 function atualizarTela() {
   const mesVisualizado = dataVisualizacao.getMonth();
@@ -499,13 +551,32 @@ function atualizarTela() {
   const resumo = calcularResumo(transacoesDoMes);
   const resumoInv = calcularResumoInvestimentos(investimentosDoMes);
 
+  // --- SOBRA AUTOMÁTICA ---
+  let sobraAnterior = 0;
+  if (sobraAutomaticaAtiva) {
+    const ant = mesAnterior(anoVisualizado, mesVisualizado);
+    sobraAnterior = calcularSobraDoMes(ant.ano, ant.mes);
+  }
+
   // Investimentos saem da conta — somam nas saídas e subtraem do saldo
   const saidasTotal = resumo.saidas + resumoInv.total;
-  const saldoTotal = resumo.entradas - saidasTotal;
+  const entradasComSobra = resumo.entradas + sobraAnterior;
+  const saldoTotal = entradasComSobra - saidasTotal;
 
-  document.getElementById('total-entradas').innerText = formatarMoeda(resumo.entradas);
+  document.getElementById('total-entradas').innerText = formatarMoeda(entradasComSobra);
   document.getElementById('total-saidas').innerText = formatarMoeda(saidasTotal);
   document.getElementById('total-saldo').innerText = formatarMoeda(saldoTotal);
+
+  // Atualiza indicador de sobra no cartão de entradas
+  const badgeSobra = document.getElementById('badge-sobra-anterior');
+  if (badgeSobra) {
+    if (sobraAutomaticaAtiva && sobraAnterior > 0) {
+      badgeSobra.innerText = `+ ${formatarMoeda(sobraAnterior)} do mês anterior`;
+      badgeSobra.classList.remove('hidden');
+    } else {
+      badgeSobra.classList.add('hidden');
+    }
+  }
 
   // Usa data-attribute para controlar cor do cartão de saldo via CSS
   document.getElementById('cartao-saldo').setAttribute('data-negativo', saldoTotal < 0 ? 'true' : 'false');
