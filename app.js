@@ -139,7 +139,7 @@ function mostrarToast(mensagem, tipo = 'success') {
   const bgClass = tipo === 'success' ? 'bg-emerald-600' : tipo === 'info' ? 'bg-blue-600' : 'bg-rose-600';
   const icone = tipo === 'success' ? 'check-circle' : tipo === 'info' ? 'info' : 'alert-circle';
 
-  toast.className = `${bgClass} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 w-max max-w-[90vw] toast-enter`;
+  toast.className = `${bgClass} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 w-max max-w-[90vw] toast-enter pointer-events-auto`;
   toast.innerHTML = `<i data-lucide="${icone}" class="w-6 h-6 shrink-0"></i><span class="font-medium">${escaparHTML(mensagem)}</span>`;
 
   container.appendChild(toast);
@@ -189,6 +189,8 @@ document.addEventListener('keydown', (e) => {
     fecharModalPerfil();
     fecharHistorico();
     fecharModalInvestimento();
+    fecharModalNotificacoes();
+    fecharModalUpdate();
   }
 });
 
@@ -394,7 +396,21 @@ window.abrirModalEdicao = (id) => {
   mudarTipo(transacao.type);
   document.getElementById('form-desc').value = transacao.description;
   document.getElementById('form-valor').value = transacao.amount;
-  document.getElementById('form-categoria').value = transacao.category;
+
+  // Bug 1 fix: Restaurar categorias customizadas corretamente
+  const cats = transacao.type === 'income' ? CATEGORIAS_ENTRADA : CATEGORIAS_SAIDA;
+  const selectCat = document.getElementById('form-categoria');
+  const inputOutros = document.getElementById('form-categoria-outros');
+  if (cats.includes(transacao.category)) {
+    selectCat.value = transacao.category;
+    inputOutros.classList.add('hidden');
+    inputOutros.value = '';
+  } else {
+    selectCat.value = 'Outros';
+    inputOutros.classList.remove('hidden');
+    inputOutros.value = transacao.category;
+  }
+
   document.getElementById('form-data').value = transacao.date;
   document.getElementById('modal-title').innerText = 'Editar Conta';
   document.getElementById('btn-salvar').innerHTML = '<i data-lucide="save" class="w-5 h-5"></i> Salvar Alterações';
@@ -524,13 +540,25 @@ window.mudarMes = (delta) => {
 };
 
 // --- SOBRA AUTOMÁTICA: Calcula o saldo positivo de um mês anterior ---
-function calcularSobraDoMes(ano, mes) {
+function calcularSobraDoMes(ano, mes, _visitados = new Set()) {
+  const chave = `${ano}-${mes}`;
+  // Proteção contra recursão infinita
+  if (_visitados.has(chave)) return 0;
+  _visitados.add(chave);
+
   const t = filtrarListaPorMes(transacoes, ano, mes);
   const inv = filtrarListaPorMes(investimentos, ano, mes);
+
+  // Se não há nenhum registro neste mês, interrompe a cadeia
+  if (t.length === 0 && inv.length === 0) return 0;
+
   const r = calcularResumo(t);
   const rInv = calcularResumoInvestimentos(inv);
-  // Não incluir sobra encadeada — apenas as transações reais do mês
-  const saldo = r.entradas - (r.saidas + rInv.total);
+
+  // Incluir sobra encadeada do mês anterior
+  const ant = mesAnterior(ano, mes);
+  const sobraAnt = sobraAutomaticaAtiva ? calcularSobraDoMes(ant.ano, ant.mes, _visitados) : 0;
+  const saldo = (r.entradas + sobraAnt) - (r.saidas + rInv.total);
   return saldo > 0 ? saldo : 0;
 }
 
@@ -645,7 +673,7 @@ function atualizarTela() {
 
   const listaInvHTML = document.getElementById('lista-investimentos');
   if (investimentosDoMes.length === 0) {
-    listaInvHTML.innerHTML = '';
+    listaInvHTML.innerHTML = `<div class="p-6 text-center text-slate-400 text-sm"><p>Nenhum investimento registrado neste mês.</p></div>`;
   } else {
     listaInvHTML.innerHTML = investimentosDoMes.map(inv => `
       <div class="p-4 hover:bg-violet-50/50 transition-colors flex items-center justify-between group">
@@ -683,7 +711,9 @@ function atualizarTela() {
 // --- SISTEMA DE HISTÓRICO E RELATÓRIOS ---
 function agruparTransacoes() {
   const agrupado = {};
-  transacoes.forEach(t => {
+  // Bug 3 fix: Incluir investimentos no agrupamento do histórico
+  const todos = [...transacoes, ...investimentos];
+  todos.forEach(t => {
     const [ano, mes] = t.date.split('-');
     if (!agrupado[ano]) agrupado[ano] = new Set();
     agrupado[ano].add(parseInt(mes) - 1);
@@ -771,23 +801,47 @@ window.gerarRelatorio = (anoStr, mes) => {
   const isMensal = mes !== undefined;
 
   let transacoesFiltradas;
+  let investimentosFiltrados;
   let titulo;
 
   if (isMensal) {
     transacoesFiltradas = filtrarListaPorMes(transacoes, ano, mes);
+    investimentosFiltrados = filtrarListaPorMes(investimentos, ano, mes);
     titulo = `${mesesNomes[mes]}/${ano}`;
   } else {
     transacoesFiltradas = transacoes.filter(t => t.date.startsWith(anoStr));
+    investimentosFiltrados = investimentos.filter(i => i.date.startsWith(anoStr));
     titulo = `${ano}`;
   }
 
   const resumo = calcularResumo(transacoesFiltradas);
+  const resumoInv = calcularResumoInvestimentos(investimentosFiltrados);
+
+  // Bug 4 fix: Incluir investimentos nos cálculos do relatório
+  const saidasTotal = resumo.saidas + resumoInv.total;
+  const saldoTotal = resumo.entradas - saidasTotal;
+
+  // Montar categorias incluindo investimentos como na tela principal
+  const categoriasComInvestimento = { ...resumo.gastosPorCategoria };
+  if (resumoInv.total > 0) {
+    categoriasComInvestimento['Investimentos'] = (categoriasComInvestimento['Investimentos'] || 0) + resumoInv.total;
+  }
+  const arrayCategoriasComInv = Object.entries(categoriasComInvestimento)
+    .map(([nome, valor]) => ({ nome, valor, pct: saidasTotal > 0 ? (valor / saidasTotal) * 100 : 0 }))
+    .sort((a, b) => b.valor - a.valor);
+
   const viewRelatorio = document.getElementById('view-relatorio');
 
   const btnVerContas = isMensal ? `
     <button onclick="irParaMesHistorico(${ano}, ${mes})" class="w-full bg-slate-800 hover:bg-slate-900 text-white p-3 rounded-xl flex items-center justify-center gap-2 font-bold shadow-sm transition-colors mb-2">
       <i data-lucide="list" class="w-5 h-5 text-slate-300"></i> Ver todas as contas deste mês
     </button>` : '';
+
+  const secaoInvestimentos = resumoInv.total > 0 ? `
+      <div class="bg-violet-50 p-4 rounded-2xl border border-violet-100 shadow-sm">
+        <p class="text-xs text-slate-500 mb-1 flex items-center gap-1"><i data-lucide="trending-up" class="w-3 h-3 text-violet-500"></i> ${isMensal ? 'Investimentos' : 'Investimentos do Ano'}</p>
+        <p class="text-lg font-bold text-violet-600">${formatarMoeda(resumoInv.total)}</p>
+      </div>` : '';
 
   viewRelatorio.innerHTML = `
     <div class="bg-white p-4 border-b border-slate-100 shrink-0 flex items-center justify-between">
@@ -806,18 +860,19 @@ window.gerarRelatorio = (anoStr, mes) => {
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
           <p class="text-xs text-slate-500 mb-1 flex items-center gap-1"><i data-lucide="arrow-down-circle" class="w-3 h-3 text-rose-500"></i> ${isMensal ? 'Saídas' : 'Gastos do Ano'}</p>
-          <p class="text-lg font-bold text-rose-600">${formatarMoeda(resumo.saidas)}</p>
+          <p class="text-lg font-bold text-rose-600">${formatarMoeda(saidasTotal)}</p>
         </div>
       </div>
+      ${secaoInvestimentos}
       <div class="bg-slate-800 p-5 rounded-2xl shadow-md text-white">
         <p class="text-sm text-slate-300 mb-1 flex items-center gap-1"><i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i> ${isMensal ? 'Saldo do Mês' : 'Saldo Final de ' + ano}</p>
-        <p class="text-3xl font-bold ${resumo.saldo >= 0 ? 'text-white' : 'text-rose-400'}">${formatarMoeda(resumo.saldo)}</p>
+        <p class="text-3xl font-bold ${saldoTotal >= 0 ? 'text-white' : 'text-rose-400'}">${formatarMoeda(saldoTotal)}</p>
       </div>
       <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
         <h5 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
           <i data-lucide="pie-chart" class="w-4 h-4 text-slate-400"></i> ${isMensal ? 'Despesas do mês' : 'Maiores despesas do ano'}
         </h5>
-        <div class="space-y-4">${renderizarBarrasProgresso(resumo.arrayCategorias, 'gasto')}</div>
+        <div class="space-y-4">${renderizarBarrasProgresso(arrayCategoriasComInv, 'gasto')}</div>
       </div>
     </div>`;
 
@@ -979,13 +1034,26 @@ window.baixarAtualizacao = async () => {
   btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i><span>Iniciando download...</span>';
   lucide.createIcons({ nodes: [btn] });
 
-  // Se usar autoUpdater nativo do Electron
+  const isMac = window.electronAPI && window.electronAPI.platform === 'darwin';
+
+  // macOS: sempre abre o .dmg no navegador (electron-updater requer assinatura Apple)
+  if (isMac && _urlDownloadAtual) {
+    await window.electronAPI.abrirDownload(_urlDownloadAtual);
+    setTimeout(() => {
+      window.fecharModalUpdate();
+      mostrarToast('Download iniciado no navegador! Instale após concluir.', 'success');
+    }, 1000);
+    return;
+  }
+
+  // Windows: usa electron-updater para baixar em background
   if (window.electronAPI && window.electronAPI.baixarAtualizacao) {
     window.electronAPI.baixarAtualizacao();
     mostrarToast('Baixando atualização em segundo plano...', 'info');
     adicionarNotificacaoDownload(document.getElementById('update-versao-nova').textContent.replace('v', ''));
     setTimeout(() => window.fecharModalUpdate(), 1000);
   } else if (_urlDownloadAtual) {
+    // Fallback: abre no navegador
     if (window.electronAPI && window.electronAPI.abrirDownload) {
       await window.electronAPI.abrirDownload(_urlDownloadAtual);
     } else {
@@ -1012,7 +1080,7 @@ async function verificarAtualizacao(manual = false) {
 // ==========================================
 
 if (window.electronAPI && window.electronAPI.onUpdateAvailable) {
-  // Quando acha update, busca o changelog e exibe o modal ANTES de baixar
+  // Quando acha update (Windows — electron-updater), busca changelog e exibe modal
   window.electronAPI.onUpdateAvailable(async (version) => {
     let changelog = [];
     try {
@@ -1028,19 +1096,18 @@ if (window.electronAPI && window.electronAPI.onUpdateAvailable) {
     exibirModalUpdate(currentVersion, version, null, changelog);
   });
 
-  // Quando termina de baixar, pede pra instalar
+  // Quando termina de baixar (Windows), pede pra instalar
   window.electronAPI.onUpdateDownloaded((version) => {
     mostrarToast(`Atualização ${version} pronta para instalar!`, 'success');
     atualizarNotificacaoParaInstalar(version);
-    // Exibe o modal
     document.getElementById('update-title').textContent = 'Atualização Pronta!';
     document.getElementById('update-versao-nova').textContent = `v${version}`;
-    
+
     const btn = document.getElementById('btn-baixar-update');
     btn.innerHTML = '<i data-lucide="refresh-cw" class="w-5 h-5"></i><span>Instalar e Reiniciar</span>';
     btn.onclick = () => window.electronAPI.instalarAtualizacao();
     lucide.createIcons({ nodes: [btn] });
-    
+
     if (!window.updateJaVisto) {
       window.updateJaVisto = true;
       document.getElementById('modal-update').classList.remove('hidden');
@@ -1050,6 +1117,22 @@ if (window.electronAPI && window.electronAPI.onUpdateAvailable) {
         card.classList.add('scale-100', 'opacity-100');
       });
     }
+  });
+}
+
+// ---- macOS: update via GitHub API → abre .dmg no navegador ----
+if (window.electronAPI && window.electronAPI.onUpdateAvailableMac) {
+  window.electronAPI.onUpdateAvailableMac(async ({ version, url }) => {
+    let changelog = [];
+    try {
+      const res = await fetch(UPDATE_JSON_URL + '?t=' + Date.now());
+      const data = await res.json();
+      if (data.changelog && Array.isArray(data.changelog)) changelog = data.changelog;
+    } catch (e) { /* silencioso */ }
+
+    const currentVersion = window.electronAPI.version || '2.0.0';
+    // Passa a URL do .dmg como _urlDownloadAtual para o botão de download
+    exibirModalUpdate(currentVersion, version, url, changelog);
   });
 }
 

@@ -17,9 +17,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Abre link de download no navegador do sistema de forma segura
   abrirDownload: (url) => ipcRenderer.invoke('abrir-url-externa', url),
 
-  // Auto-Updater (in-app seamless)
-  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (_event, version) => callback(version)),
-  onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (_event, version) => callback(version)),
-  baixarAtualizacao: () => ipcRenderer.invoke('baixar-atualizacao'),
+  // ---- Auto-Updater: Windows (electron-updater) ----
+  onUpdateAvailable:  (cb) => ipcRenderer.on('update-available',  (_e, version) => cb(version)),
+  onUpdateDownloaded: (cb) => ipcRenderer.on('update-downloaded', (_e, version) => cb(version)),
+  onUpdateProgress:   (cb) => ipcRenderer.on('update-progress',   (_e, progress) => cb(progress)),
+  baixarAtualizacao:  ()  => ipcRenderer.invoke('baixar-atualizacao'),
   instalarAtualizacao: () => ipcRenderer.invoke('instalar-atualizacao'),
+
+  // ---- Auto-Updater: macOS (GitHub API + browser download) ----
+  // Recebe { version, url } quando há update disponível no macOS
+  onUpdateAvailableMac: (cb) => ipcRenderer.on('update-available-mac', (_e, info) => cb(info)),
 });
