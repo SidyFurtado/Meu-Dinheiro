@@ -1,11 +1,9 @@
 {
-  "version": "2.3.1",
-  "windows": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.3.1/Meu-Dinheiro-Setup-2.3.1.exe",
-  "mac": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.3.1/Meu-Dinheiro-2.3.1-universal.dmg",
+  "version": "2.3.2",
+  "windows": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.3.2/Meu-Dinheiro-Setup-2.3.2.exe",
+  "mac": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.3.2/Meu-Dinheiro-2.3.2-universal.dmg",
   "changelog": [
-    "Corrigido o sistema de atualizações no macOS, que agora baixa o arquivo e abre no navegador corretamente.",
-    "Corrigido o sistema de atualizações automáticas no Windows (agora funciona a partir das próximas versões).",
-    "Resolvido o problema no macOS em que não era possível arrastar a janela do aplicativo pela barra do topo.",
-    "Melhorias na configuração de build para evitar que o Windows SmartScreen e macOS Gatekeeper bloqueiem o app agressivamente."
+    "Resgate de dados: restauramos automaticamente as contas, saldo e categorias de usuários que vieram da versão anterior.",
+    "O update oculto no Mac foi completamente removido; os próximos avisarão de forma explícita na tela."
   ]
 }

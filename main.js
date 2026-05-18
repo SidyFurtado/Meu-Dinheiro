@@ -28,7 +28,46 @@ ipcMain.handle('baixar-atualizacao', () => {
 // JANELA PRINCIPAL
 // =============================================
 
-function createWindow() {
+async function migrarDadosAntigos() {
+  try {
+    const tempWin = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
+    
+    // Verifica se já migrou
+    await tempWin.loadFile('app.html');
+    const isMigrated = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("migrated_v2")');
+    if (isMigrated === "true") {
+      tempWin.close();
+      return;
+    }
+
+    // Carrega index.html e busca os dados antigos
+    await tempWin.loadFile('index.html');
+    const transacoes = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("transacoes_app")');
+    const investimentos = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("investimentos_app")');
+    const meuPerfil = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("meuPerfil")');
+    const sobraAutomatica = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("sobraAutomatica")');
+
+    // Volta para app.html e injeta os dados resgatados
+    await tempWin.loadFile('app.html');
+    await tempWin.webContents.executeJavaScript(`
+      ${transacoes ? `window.localStorage.setItem("transacoes_app", ${JSON.stringify(transacoes)});` : ''}
+      ${investimentos ? `window.localStorage.setItem("investimentos_app", ${JSON.stringify(investimentos)});` : ''}
+      ${meuPerfil ? `window.localStorage.setItem("meuPerfil", ${JSON.stringify(meuPerfil)});` : ''}
+      ${sobraAutomatica ? `window.localStorage.setItem("sobraAutomatica", ${JSON.stringify(sobraAutomatica)});` : ''}
+      window.localStorage.setItem("migrated_v2", "true");
+    `);
+    
+    tempWin.close();
+    console.log('[Migração] Dados antigos restaurados com sucesso.');
+  } catch (err) {
+    console.error('[Migração] Erro ao migrar dados:', err);
+  }
+}
+
+async function createWindow() {
+  // Executa a migração antes de abrir o aplicativo principal
+  await migrarDadosAntigos();
+
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 750,
