@@ -102,9 +102,9 @@ label,
   cursor: pointer;
 }
 
-/* O header não é dragável para não bloquear cliques */
+/* O header é a área onde o usuário pode arrastar a janela no macOS */
 header {
-  -webkit-app-region: no-drag;
+  -webkit-app-region: drag;
 }
 
 /* Garante que elementos dentro de modais também funcionem */
