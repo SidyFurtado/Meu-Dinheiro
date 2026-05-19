@@ -8,24 +8,92 @@
   <meta name="description"
     content="Organize suas finanças pessoais com facilidade. Controle receitas, despesas e acompanhe seus gastos por categoria.">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; img-src 'self' data: blob: https://ui-avatars.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://sidyfurtado.github.io https://fonts.googleapis.com https://fonts.gstatic.com;">
+    content="default-src 'self'; img-src 'self' data: blob: https://ui-avatars.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com; frame-src 'self' https://meu-dinheiro-6b1ab.firebaseapp.com; connect-src 'self' https://sidyfurtado.github.io https://fonts.googleapis.com https://fonts.gstatic.com wss://*.firebaseio.com https://*.googleapis.com https://*.firebaseio.com https://meu-dinheiro-6b1ab.firebaseapp.com https://apis.google.com https://accounts.google.com;">
 
   <!-- Tailwind CSS compilado (local, funciona offline) -->
   <link rel="stylesheet" href="tailwind-output.css">
 
   <!-- Estilos customizados -->
   <link rel="stylesheet" href="style.css">
+
+  <!-- Inicialização rápida do Modo Escuro para evitar flash visual -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
 </head>
 
-<body class="min-h-screen bg-slate-50 font-sans text-slate-800">
+<body class="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100">
 
   <!-- CONTAINER DE NOTIFICAÇÕES (TOASTS) -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+  <!-- TELA DE LOGIN -->
+  <div id="login-container" class="min-h-screen bg-transparent flex flex-col items-center justify-center p-4 fade-in">
+    <div class="bg-white/70 dark:bg-slate-800/40 backdrop-blur-md p-8 rounded-3xl shadow-md max-w-md w-full border border-white/50 dark:border-white/10 transition-all duration-300">
+      <div class="text-center mb-8">
+        <div class="bg-emerald-100 dark:bg-emerald-950/40 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600 dark:text-emerald-400">
+          <i data-lucide="wallet" class="w-8 h-8"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Meu Dinheiro</h1>
+        <p class="text-slate-500 dark:text-slate-400 text-sm mt-2" id="login-subtitle">Faça login para sincronizar suas contas.</p>
+      </div>
+
+      <form id="form-auth" class="space-y-5">
+        <div>
+          <label for="auth-email" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">E-mail</label>
+          <input type="email" id="auth-email" required placeholder="seu@email.com" class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100">
+        </div>
+        <div>
+          <label for="auth-senha" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha</label>
+          <input type="password" id="auth-senha" required placeholder="••••••••" class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100">
+        </div>
+        
+        <button type="submit" id="btn-auth-submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl py-4 transition-colors shadow-md flex items-center justify-center gap-2">
+          <i data-lucide="log-in" class="w-5 h-5"></i> <span id="btn-auth-text">Entrar</span>
+        </button>
+      </form>
+
+      <!-- Divisor -->
+      <div class="relative mt-8 mb-6">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-white/20 dark:border-white/10"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-2 bg-slate-100 dark:bg-slate-900 text-slate-400 rounded-lg">Ou continue com</span>
+        </div>
+      </div>
+
+      <!-- Botões Sociais -->
+      <div class="space-y-3">
+        <button type="button" onclick="window.fazerLoginGoogle()" class="w-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-xl py-3 transition-colors shadow-sm flex items-center justify-center gap-3">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Google
+        </button>
+
+      </div>
+
+      <div class="mt-6 text-center">
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          <span id="auth-switch-text">Não tem uma conta?</span>
+          <button type="button" onclick="window.alternarModoAuth()" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline ml-1" id="btn-auth-switch">Criar conta</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- APP PRINCIPAL -->
-  <div id="app-container">
+  <div id="app-container" class="hidden">
     <!-- CABEÇALHO -->
-    <header class="bg-emerald-600 text-white pt-10 pb-24 px-6 rounded-b-[40px] shadow-lg relative">
+    <header class="bg-emerald-600 dark:bg-emerald-800 text-white pt-10 pb-24 px-6 rounded-b-[40px] shadow-lg relative">
       <!-- Espaço para os botões de controle do macOS (semáforo) -->
       <div class="h-6 hidden" id="macos-titlebar-space"></div>
       <div class="max-w-4xl mx-auto">
@@ -58,9 +126,11 @@
                 <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500 border border-white"></span>
               </span>
             </button>
-            <div class="bg-white/20 p-3 rounded-full backdrop-blur-sm shadow-inner hidden md:block">
-              <i data-lucide="wallet" class="w-6 h-6 text-white"></i>
-            </div>
+            <button onclick="abrirModalConfiguracoes()"
+              class="bg-white/20 p-3 rounded-full backdrop-blur-sm shadow-inner hover:bg-white/30 transition-colors cursor-pointer"
+              aria-label="Configura&ccedil;&otilde;es">
+              <i data-lucide="settings" class="w-6 h-6 text-white"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -71,21 +141,20 @@
       <!-- NAVEGAÇÃO SUPERIOR -->
       <div class="flex flex-col gap-3">
         <!-- SELETOR DE MÊS / ANO -->
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+        <div class="bg-white/70 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl p-4 shadow-md border border-white/50 dark:border-white/10 flex items-center justify-between hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
           <button onclick="mudarMes(-1)"
-            class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium">
+            class="p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-450 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium">
             <i data-lucide="chevron-left" class="w-5 h-5"></i> Anterior
           </button>
-          <h2 id="mes-ano-display" class="text-xl font-bold text-emerald-800 capitalize">Mês Ano</h2>
+          <h2 id="mes-ano-display" class="text-xl font-bold text-emerald-800 dark:text-emerald-400 capitalize">Mês Ano</h2>
           <button onclick="mudarMes(1)"
-            class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium">
+            class="p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-450 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium">
             Próximo <i data-lucide="chevron-right" class="w-5 h-5"></i>
           </button>
         </div>
 
-        <!-- ABA DE HISTÓRICO E RELATÓRIOS -->
-        <button onclick="abrirHistorico()"
-          class="w-full bg-slate-800 text-white rounded-xl p-3 shadow-sm hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 font-semibold">
+              <button onclick="abrirHistorico()"
+          class="w-full bg-slate-800 dark:bg-slate-950 text-white rounded-xl p-3 shadow-md hover:shadow-lg hover:bg-slate-900 dark:hover:bg-slate-900 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 font-semibold">
           <i data-lucide="folder-open" class="w-5 h-5 text-emerald-400"></i>
           Histórico e Relatórios
         </button>
@@ -93,26 +162,26 @@
 
       <!-- CARTÕES DE RESUMO -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between">
-          <div class="flex justify-between items-center text-slate-500 mb-2">
+        <div class="bg-white/70 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl p-5 shadow-md border border-white/50 dark:border-white/10 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 mb-2">
             <span class="font-medium">Tudo que Entrou</span>
             <i data-lucide="arrow-up-circle" class="w-6 h-6 text-emerald-500"></i>
           </div>
-          <strong id="total-entradas" class="text-2xl font-bold text-slate-800">R$ 0,00</strong>
+          <strong id="total-entradas" class="text-2xl font-bold text-slate-800 dark:text-slate-100">R$ 0,00</strong>
           <span id="badge-sobra-anterior"
-            class="hidden mt-1 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5 w-fit"></span>
+            class="hidden mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-450 bg-emerald-50 dark:bg-emerald-950/40 rounded-full px-2 py-0.5 w-fit"></span>
         </div>
 
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between">
-          <div class="flex justify-between items-center text-slate-500 mb-2">
+        <div class="bg-white/70 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl p-5 shadow-md border border-white/50 dark:border-white/10 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 mb-2">
             <span class="font-medium">Tudo que Saiu</span>
             <i data-lucide="arrow-down-circle" class="w-6 h-6 text-rose-500"></i>
           </div>
-          <strong id="total-saidas" class="text-2xl font-bold text-slate-800">R$ 0,00</strong>
+          <strong id="total-saidas" class="text-2xl font-bold text-slate-800 dark:text-slate-100">R$ 0,00</strong>
         </div>
 
         <div id="cartao-saldo"
-          class="rounded-2xl p-5 shadow-md flex flex-col justify-between text-white bg-slate-800 transition-colors"
+          class="rounded-2xl p-5 shadow-md flex flex-col justify-between text-white transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
           data-negativo="false">
           <div class="flex justify-between items-center mb-2 text-slate-200">
             <span class="font-medium">O que sobrou (Saldo)</span>
@@ -125,15 +194,15 @@
       <!-- BOTÕES DE AÇÃO RÁPIDA -->
       <div class="grid grid-cols-2 gap-3">
         <button onclick="abrirModal('income')"
-          class="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors border border-emerald-200 shadow-sm">
+          class="bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200/80 dark:hover:bg-emerald-900/30 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1">
           <i data-lucide="plus" class="w-5 h-5"></i> Recebi um Dinheiro
         </button>
         <button onclick="abrirModal('expense')"
-          class="bg-rose-100 text-rose-700 hover:bg-rose-200 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors border border-rose-200 shadow-sm">
+          class="bg-rose-100 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-200/80 dark:hover:bg-rose-900/30 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1">
           <i data-lucide="plus" class="w-5 h-5"></i> Fiz um Gasto
         </button>
         <button onclick="abrirModalInvestimento()"
-          class="col-span-2 bg-violet-100 text-violet-700 hover:bg-violet-200 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors border border-violet-200 shadow-sm">
+          class="col-span-2 bg-violet-100 dark:bg-violet-950/20 text-violet-700 dark:text-violet-400 hover:bg-violet-200/80 dark:hover:bg-violet-900/30 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1">
           <i data-lucide="trending-up" class="w-5 h-5"></i> Fiz um Investimento
         </button>
       </div>
@@ -143,21 +212,26 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- LISTA DE TRANSAÇÕES (receitas e gastos) -->
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+        <div class="lg:col-span-2 bg-white/70 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl shadow-md border border-white/50 dark:border-white/10 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div class="p-5 border-b border-white/20 dark:border-white/5 bg-white/40 dark:bg-slate-900/30 flex justify-between items-center">
+            <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <i data-lucide="calendar" class="w-5 h-5 text-slate-400"></i> Histórico do Mês
             </h2>
+            <button onclick="exportarRelatorioPDF()"
+              class="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold shadow-sm hover:shadow transition-all duration-300"
+              title="Exportar Relatório Mensal em PDF">
+              <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
+            </button>
           </div>
-          <div id="lista-transacoes" class="divide-y divide-slate-100 min-h-[200px]">
+          <div id="lista-transacoes" class="divide-y divide-slate-100 dark:divide-slate-700 min-h-[200px]">
             <!-- As transações aparecerão aqui via JavaScript -->
           </div>
         </div>
 
         <!-- GRÁFICO DE GASTOS POR CATEGORIA -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden h-fit">
-          <div class="p-5 border-b border-slate-100 bg-slate-50/50">
-            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+        <div class="bg-white/70 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl shadow-md border border-white/50 dark:border-white/10 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-fit">
+          <div class="p-5 border-b border-white/20 dark:border-white/5 bg-white/40 dark:bg-slate-900/30">
+            <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <i data-lucide="pie-chart" class="w-5 h-5 text-slate-400"></i> Gastos do Mês
             </h2>
           </div>
@@ -170,20 +244,20 @@
 
       <!-- ======= SEÇÃO: MEUS INVESTIMENTOS ======= -->
 
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div class="bg-white/70 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl shadow-md border border-white/50 dark:border-white/10 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
         <div
-          class="p-5 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-indigo-50 flex justify-between items-center">
-          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          class="p-5 border-b border-white/20 dark:border-white/5 bg-gradient-to-r from-violet-50/40 to-indigo-50/40 dark:from-violet-950/10 dark:to-indigo-950/10 flex justify-between items-center">
+          <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <i data-lucide="trending-up" class="w-5 h-5 text-violet-500"></i> Meus Investimentos
           </h2>
           <span id="total-investido-badge"
-            class="text-sm font-bold text-violet-700 bg-violet-100 px-3 py-1 rounded-full">R$ 0,00</span>
+            class="text-sm font-bold text-violet-700 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/40 px-3 py-1 rounded-full">R$ 0,00</span>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:divide-x divide-slate-100">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:divide-x divide-white/20 dark:divide-white/5">
           <!-- Distribuição por tipo de investimento -->
           <div class="p-5 space-y-4">
-            <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+            <h3 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
               <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Distribuição
             </h3>
             <div id="investimentos-categorias" class="space-y-4">
@@ -192,16 +266,35 @@
           </div>
 
           <!-- Lista de investimentos do mês -->
-          <div class="lg:col-span-2 border-t lg:border-t-0 border-slate-100">
-            <div class="p-4 bg-slate-50/50 border-b border-slate-100">
-              <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+          <div class="lg:col-span-2 border-t lg:border-t-0 border-white/20 dark:border-white/5">
+            <div class="p-4 bg-white/40 dark:bg-slate-900/30 border-b border-white/20 dark:border-white/5">
+              <h3 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
                 <i data-lucide="list" class="w-4 h-4"></i> Histórico de Investimentos
               </h3>
             </div>
-            <div id="lista-investimentos" class="divide-y divide-slate-100 min-h-[100px]">
+            <div id="lista-investimentos" class="divide-y divide-slate-100 dark:divide-slate-700 min-h-[100px]">
               <!-- Investimentos aparecerão aqui via JavaScript -->
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ======= SEÇÃO: METAS E SONHOS ======= -->
+      <div class="bg-white/70 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl shadow-md border border-white/50 dark:border-white/10 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div
+          class="p-5 border-b border-white/20 dark:border-white/5 bg-gradient-to-r from-emerald-50/40 to-teal-50/40 dark:from-emerald-950/10 dark:to-teal-950/10 flex justify-between items-center">
+          <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <i data-lucide="target" class="w-5 h-5 text-emerald-500"></i> Metas e Sonhos
+          </h2>
+          <button onclick="abrirModalMeta()"
+            class="p-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors flex items-center gap-1 text-sm font-semibold"
+            title="Nova Meta">
+            <i data-lucide="plus" class="w-4 h-4"></i> Nova Meta
+          </button>
+        </div>
+
+        <div id="lista-metas" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- As metas aparecerão aqui via JavaScript -->
         </div>
       </div>
     </main>
@@ -210,8 +303,8 @@
     <div id="modal-historico" role="dialog" aria-modal="true" aria-label="Histórico de Pastas"
       class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
       <div
-        class="bg-slate-50 rounded-3xl w-full max-w-lg shadow-2xl zoom-in max-h-[90vh] overflow-y-auto relative flex flex-col">
-        <div class="p-6 bg-slate-800 text-white flex justify-between items-center sticky top-0 z-10 shrink-0 shadow-sm">
+        class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-3xl w-full max-w-lg shadow-2xl border border-white/50 dark:border-white/10 zoom-in max-h-[90vh] overflow-y-auto relative flex flex-col">
+        <div class="p-6 bg-slate-800/80 dark:bg-slate-900/80 text-white flex justify-between items-center sticky top-0 z-10 shrink-0 border-b border-white/20 dark:border-white/5 backdrop-blur-md">
           <h3 class="text-xl font-bold flex items-center gap-2">
             <i data-lucide="folder-search" class="w-5 h-5 text-emerald-400"></i> Histórico de Pastas
           </h3>
@@ -233,9 +326,9 @@
     <div id="modal-cadastro" role="dialog" aria-modal="true" aria-labelledby="modal-title" data-tipo="expense"
       class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
       <div
-        class="bg-white rounded-3xl w-full max-w-md shadow-2xl zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
+        class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-3xl w-full max-w-md shadow-2xl border border-white/50 dark:border-white/10 zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
         <div id="modal-header"
-          class="p-6 text-white flex justify-between items-center bg-emerald-600 sticky top-0 z-10 shrink-0 shadow-sm transition-colors">
+          class="p-6 text-white flex justify-between items-center sticky top-0 z-10 shrink-0 shadow-sm transition-colors">
           <h3 id="modal-title" class="text-xl font-bold flex items-center gap-2">Adicionar Conta</h3>
           <button onclick="fecharModal()"
             class="text-white/80 hover:text-white bg-white/10 p-2 rounded-full transition-colors" aria-label="Fechar">
@@ -246,7 +339,7 @@
         <form id="form-transacao" class="p-6 space-y-5">
           <input type="hidden" id="form-tipo" value="expense">
 
-          <div class="flex gap-2 p-1 bg-slate-100 rounded-xl">
+          <div class="flex gap-2 p-1 bg-slate-200/50 dark:bg-slate-950/40 rounded-xl">
             <button type="button" id="btn-tipo-entrada" onclick="mudarTipo('income')"
               class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all text-slate-500 hover:bg-slate-200">
               Entrada (Recebi)
@@ -258,35 +351,35 @@
           </div>
 
           <div>
-            <label for="form-desc" class="block text-sm font-medium text-slate-700 mb-1">O que foi isso?
+            <label for="form-desc" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">O que foi isso?
               (Descrição)</label>
             <input type="text" id="form-desc" required placeholder="Ex: Conta de Luz, Salário..."
-              class="w-full border-slate-200 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800" />
+              class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100" />
           </div>
 
           <div>
-            <label for="form-valor" class="block text-sm font-medium text-slate-700 mb-1">Qual o valor? (R$)</label>
+            <label for="form-valor" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Qual o valor? (R$)</label>
             <div class="relative">
               <span class="absolute left-4 top-3 text-slate-400">R$</span>
-              <input type="number" id="form-valor" required step="0.01" min="0.01" placeholder="0,00"
-                class="w-full border-slate-200 border rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 font-medium text-lg" />
+              <input type="text" id="form-valor" required placeholder="R$ 0,00"
+                class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100 font-medium text-lg" />
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label for="form-categoria" class="block text-sm font-medium text-slate-700 mb-1">Categoria</label>
+              <label for="form-categoria" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Categoria</label>
               <select id="form-categoria" onchange="onchangeCategoria()"
-                class="w-full border-slate-200 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-slate-800">
+                class="w-full border-slate-200 dark:border-slate-700 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">
                 <!-- Preenchido via JS -->
               </select>
               <input type="text" id="form-categoria-outros" placeholder="Digite a categoria"
-                class="w-full border-slate-200 border rounded-xl px-4 py-3 mt-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-slate-800 hidden" />
+                class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 mt-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100 hidden" />
             </div>
             <div>
-              <label for="form-data" class="block text-sm font-medium text-slate-700 mb-1">Data</label>
+              <label for="form-data" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data</label>
               <input type="date" id="form-data" required
-                class="w-full border-slate-200 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800" />
+                class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100" />
             </div>
           </div>
 
@@ -302,8 +395,8 @@
     <div id="modal-perfil" role="dialog" aria-modal="true" aria-label="Configurar Perfil"
       class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
       <div
-        class="bg-white rounded-3xl w-full max-w-md shadow-2xl zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
-        <div class="p-6 text-white flex justify-between items-center bg-slate-800 sticky top-0 z-10 shrink-0 shadow-sm">
+        class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-3xl w-full max-w-md shadow-2xl border border-white/50 dark:border-white/10 zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
+        <div class="p-6 text-white flex justify-between items-center bg-slate-800/80 dark:bg-slate-900/80 sticky top-0 z-10 shrink-0 border-b border-white/20 dark:border-white/5 backdrop-blur-md">
           <h3 class="text-xl font-bold flex items-center gap-2">
             <i data-lucide="user-cog" class="w-5 h-5"></i> Configurar Perfil
           </h3>
@@ -327,50 +420,69 @@
               <input type="file" id="perfil-foto-input" accept="image/*" onchange="carregarFoto(event)"
                 class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
             </div>
-            <p class="text-xs text-slate-500 font-medium">Toque na foto para alterar</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Toque na foto para alterar</p>
           </div>
 
           <div>
-            <label for="perfil-nome" class="block text-sm font-medium text-slate-700 mb-1">Seu Nome</label>
+            <label for="perfil-nome" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Seu Nome</label>
             <input type="text" id="perfil-nome" placeholder="Como quer ser chamado?"
-              class="w-full border-slate-200 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800">
+              class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100">
           </div>
 
           <div>
-            <label for="perfil-telefone" class="block text-sm font-medium text-slate-700 mb-1">Telefone /
+            <label for="perfil-telefone" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Telefone /
               Celular</label>
             <input type="tel" id="perfil-telefone" placeholder="(00) 00000-0000"
-              class="w-full border-slate-200 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800">
+              class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100">
           </div>
 
           <button type="submit"
-            class="w-full text-white font-bold rounded-xl py-4 mt-2 transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900">
+            class="w-full text-white font-bold rounded-xl py-4 mt-2 transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2 bg-slate-800 dark:bg-slate-950 hover:bg-slate-900 dark:hover:bg-black">
             <i data-lucide="check-circle" class="w-5 h-5"></i> Salvar Alterações
           </button>
+        </form>
+      </div>
+    </div>
 
+    <!-- MODAL DE CONFIGURAÇÕES -->
+    <div id="modal-configuracoes" role="dialog" aria-modal="true" aria-label="Configurações"
+      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
+      <div
+        class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-3xl w-full max-w-md shadow-2xl border border-white/50 dark:border-white/10 zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
+        <div class="p-6 text-white flex justify-between items-center bg-slate-800/80 dark:bg-slate-900/80 sticky top-0 z-10 shrink-0 border-b border-white/20 dark:border-white/5 backdrop-blur-md">
+          <h3 class="text-xl font-bold flex items-center gap-2">
+            <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+          </h3>
+          <button onclick="fecharModalConfiguracoes()"
+            class="text-white/80 hover:text-white bg-white/10 p-2 rounded-full transition-colors" aria-label="Fechar">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-5">
           <!-- ATUALIZAÇÃO DO SISTEMA -->
-          <div class="pt-5 border-t border-slate-100 mt-2">
-            <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-              <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-500"></i> Atualização do Sistema
+          <div>
+            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+              <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-500 dark:text-emerald-400"></i> Atualização do Sistema
             </h4>
             <button type="button" onclick="verificarAtualizacao(true)"
-              class="w-full bg-slate-50 text-slate-700 hover:bg-slate-100 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors border border-slate-200">
+              class="w-full bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-950 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors">
               <i data-lucide="download-cloud" class="w-4 h-4"></i> Buscar Atualizações
             </button>
           </div>
 
           <!-- SOBRA AUTOMÁTICA -->
-          <div class="pt-5 border-t border-slate-100 mt-2">
-            <h4 class="text-sm font-bold text-slate-800 mb-1 flex items-center gap-2">
-              <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-500"></i> Sobra Automática
+          <div class="pt-5 border-t border-slate-100 dark:border-slate-700">
+            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-2">
+              <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-500 dark:text-emerald-400"></i> Sobra Automática
             </h4>
-            <p class="text-xs text-slate-500 mb-4">Quando ativado, o valor positivo que sobrar de um mês será somado
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Quando ativado, o valor positivo que sobrar de um mês será somado
               automaticamente às entradas do mês seguinte.</p>
             <button type="button" onclick="toggleSobraAutomatica()"
-              class="w-full flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 hover:bg-slate-100 transition-colors">
-              <span class="text-sm font-semibold text-slate-700">Transferir sobra para o próximo mês</span>
+              class="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-950 transition-colors">
+              <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Transferir sobra para o próximo mês</span>
               <div class="flex items-center gap-2">
-                <span id="toggle-sobra-label" class="text-xs font-bold text-slate-500">Ativado</span>
+                <span id="toggle-sobra-label" class="text-xs font-bold text-slate-500 dark:text-slate-400">Ativado</span>
                 <div id="toggle-sobra-auto"
                   class="relative w-11 h-6 rounded-full bg-emerald-500 transition-colors duration-300 cursor-pointer flex-shrink-0">
                   <span
@@ -381,23 +493,43 @@
             </button>
           </div>
 
-          <!-- SISTEMA DE BACKUP -->
-          <div class="pt-5 border-t border-slate-100 mt-2">
-            <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Backup e Segurança
+          <!-- MODO ESCURO -->
+          <div class="pt-5 border-t border-slate-100 dark:border-slate-700">
+            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-2">
+              <i data-lucide="moon" class="w-4 h-4 text-emerald-500 dark:text-emerald-400"></i> Modo Escuro
             </h4>
-            <p class="text-xs text-slate-500 mb-3">Salve um arquivo de projeto no seu computador para nunca perder seus
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Alterne o visual do aplicativo para maior conforto ocular.</p>
+            <button type="button" onclick="toggleModoEscuro()"
+              class="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-950 transition-colors">
+              <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Ativar Modo Escuro</span>
+              <div class="flex items-center gap-2">
+                <span id="toggle-dark-label" class="text-xs font-bold text-slate-500 dark:text-slate-400">Desativado</span>
+                <div id="toggle-dark-mode"
+                  class="relative w-11 h-6 rounded-full bg-slate-300 transition-colors duration-300 cursor-pointer flex-shrink-0">
+                  <span
+                    class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300"></span>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <!-- SISTEMA DE BACKUP -->
+          <div class="pt-5 border-t border-slate-100 dark:border-slate-700">
+            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500 dark:text-emerald-400"></i> Backup e Segurança
+            </h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Salve um arquivo de projeto no seu computador para nunca perder seus
               dados financeiros.</p>
 
             <div class="flex gap-2">
               <button type="button" onclick="fazerBackup()"
-                class="flex-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center gap-1 transition-colors border border-emerald-200">
+                class="flex-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center gap-1 transition-colors">
                 <i data-lucide="download-cloud" class="w-5 h-5"></i>
                 Exportar Backup
               </button>
 
               <button type="button" onclick="acionarImportacao()"
-                class="flex-1 bg-blue-50 text-blue-700 hover:bg-blue-100 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center gap-1 transition-colors border border-blue-200">
+                class="flex-1 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center gap-1 transition-colors">
                 <i data-lucide="upload-cloud" class="w-5 h-5"></i>
                 Restaurar
               </button>
@@ -406,7 +538,14 @@
                 onchange="processarImportacao(event)">
             </div>
           </div>
-        </form>
+
+          <!-- BOTÃO SAIR (LOGOUT) -->
+          <div class="pt-5 border-t border-slate-100 dark:border-slate-700">
+            <button type="button" onclick="window.fazerLogout()" class="w-full bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors">
+              <i data-lucide="log-out" class="w-4 h-4"></i> Sair da Conta
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -414,9 +553,9 @@
     <div id="modal-investimento" role="dialog" aria-modal="true" aria-labelledby="modal-inv-title"
       class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
       <div
-        class="bg-white rounded-3xl w-full max-w-md shadow-2xl zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
+        class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-3xl w-full max-w-md shadow-2xl border border-white/50 dark:border-white/10 zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
         <div
-          class="p-6 text-white flex justify-between items-center bg-gradient-to-r from-violet-600 to-indigo-600 sticky top-0 z-10 shrink-0 shadow-sm transition-colors">
+          class="p-6 text-white flex justify-between items-center bg-gradient-to-r from-violet-600/80 to-indigo-600/80 sticky top-0 z-10 shrink-0 border-b border-white/20 dark:border-white/5 backdrop-blur-md transition-colors">
           <h3 id="modal-inv-title" class="text-xl font-bold flex items-center gap-2">
             <i data-lucide="trending-up" class="w-5 h-5"></i> Registrar Investimento
           </h3>
@@ -428,27 +567,27 @@
 
         <form id="form-investimento" class="p-6 space-y-5">
           <div>
-            <label for="inv-desc" class="block text-sm font-medium text-slate-700 mb-1">Descrição do
+            <label for="inv-desc" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Descrição do
               Investimento</label>
             <input type="text" id="inv-desc" required placeholder="Ex: Aporte Tesouro Selic, Compra PETR4..."
-              class="w-full border-slate-200 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800" />
+              class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-slate-100" />
           </div>
 
           <div>
-            <label for="inv-valor" class="block text-sm font-medium text-slate-700 mb-1">Valor Investido (R$)</label>
+            <label for="inv-valor" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Valor Investido (R$)</label>
             <div class="relative">
               <span class="absolute left-4 top-3 text-slate-400">R$</span>
-              <input type="number" id="inv-valor" required step="0.01" min="0.01" placeholder="0,00"
-                class="w-full border-slate-200 border rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 font-medium text-lg" />
+              <input type="text" id="inv-valor" required placeholder="R$ 0,00"
+                class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-slate-100 font-medium text-lg" />
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label for="inv-categoria" class="block text-sm font-medium text-slate-700 mb-1">Tipo de
+              <label for="inv-categoria" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de
                 Investimento</label>
               <select id="inv-categoria" onchange="onchangeCategoriaInv()"
-                class="w-full border-slate-200 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white text-slate-800">
+                class="w-full border-slate-200 dark:border-slate-700 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">
                 <option value="Ações">Ações</option>
                 <option value="Tesouro Direto">Tesouro Direto</option>
                 <option value="Renda Fixa">Renda Fixa</option>
@@ -456,12 +595,12 @@
                 <option value="Outros">Outros</option>
               </select>
               <input type="text" id="inv-categoria-outros" placeholder="Digite o tipo"
-                class="w-full border-slate-200 border rounded-xl px-4 py-3 mt-2 focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white text-slate-800 hidden" />
+                class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 mt-2 focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-slate-100 hidden" />
             </div>
             <div>
-              <label for="inv-data" class="block text-sm font-medium text-slate-700 mb-1">Data</label>
+              <label for="inv-data" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data</label>
               <input type="date" id="inv-data" required
-                class="w-full border-slate-200 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800" />
+                class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-slate-100" />
             </div>
           </div>
 
@@ -481,12 +620,12 @@
   <div id="modal-update" role="dialog" aria-modal="true" aria-labelledby="update-title"
     class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-[999] hidden">
 
-    <div id="modal-update-card" class="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden
+    <div id="modal-update-card" class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-3xl w-full max-w-sm shadow-2xl border border-white/50 dark:border-white/10 overflow-hidden
                 transform transition-all duration-300 scale-95 opacity-0">
 
       <!-- Cabeçalho com gradiente -->
       <div
-        class="bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 text-white text-center relative overflow-hidden">
+        class="bg-gradient-to-br from-emerald-500/80 to-emerald-700/80 p-6 text-white text-center relative overflow-hidden backdrop-blur-md border-b border-white/10">
         <!-- Círculos decorativos -->
         <div class="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10"></div>
         <div class="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/10"></div>
@@ -510,7 +649,7 @@
           <div class="text-center">
             <p class="text-xs text-slate-400 font-medium mb-1">Versão atual</p>
             <span id="update-versao-atual"
-              class="bg-slate-100 text-slate-600 text-sm font-bold px-3 py-1.5 rounded-full">
+              class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold px-3 py-1.5 rounded-full">
               v—
             </span>
           </div>
@@ -520,21 +659,21 @@
           <div class="text-center">
             <p class="text-xs text-slate-400 font-medium mb-1">Nova versão</p>
             <span id="update-versao-nova"
-              class="bg-emerald-100 text-emerald-700 text-sm font-bold px-3 py-1.5 rounded-full">
+              class="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-sm font-bold px-3 py-1.5 rounded-full">
               v—
             </span>
           </div>
         </div>
 
-        <p class="text-slate-500 text-sm text-center leading-relaxed">
+        <p class="text-slate-500 dark:text-slate-400 text-sm text-center leading-relaxed">
           Uma atualização com melhorias e novidades está pronta para você.
         </p>
 
         <!-- Changelog (adicionado) -->
         <div id="update-changelog-container"
-          class="hidden bg-slate-50 rounded-xl p-4 border border-slate-100 max-h-[150px] overflow-y-auto">
+          class="hidden bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-700 max-h-[150px] overflow-y-auto">
           <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Novidades:</h4>
-          <ul id="update-changelog-list" class="space-y-2 text-sm text-slate-600 list-disc pl-4">
+          <ul id="update-changelog-list" class="space-y-2 text-sm text-slate-600 dark:text-slate-300 list-disc pl-4">
             <!-- Changelog items inserted via JS -->
           </ul>
         </div>
@@ -551,7 +690,7 @@
         </button>
 
         <!-- Botão de ignorar -->
-        <button onclick="fecharModalUpdate()" class="w-full text-slate-400 hover:text-slate-600 text-sm font-medium
+        <button onclick="fecharModalUpdate()" class="w-full text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-sm font-medium
                        py-2 transition-colors">
           Lembrar mais tarde
         </button>
@@ -567,9 +706,9 @@
     onclick="if(event.target === this) fecharModalNotificacoes()">
 
     <div
-      class="bg-white w-full max-w-sm h-full shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300"
+      class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg w-full max-w-sm h-full shadow-2xl border-l border-white/50 dark:border-white/10 flex flex-col transform translate-x-full transition-transform duration-300"
       id="notif-panel">
-      <div class="p-6 text-white flex justify-between items-center bg-slate-800">
+      <div class="p-6 text-white flex justify-between items-center bg-slate-800/80 dark:bg-slate-900/80 border-b border-white/20 dark:border-white/5 backdrop-blur-md">
         <h3 id="notif-title" class="text-xl font-bold flex items-center gap-2">
           <i data-lucide="bell" class="w-5 h-5"></i> Notificações
         </h3>
@@ -578,7 +717,7 @@
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-      <div class="flex-1 overflow-y-auto p-4 bg-slate-50 min-h-0" id="lista-notificacoes">
+      <div class="flex-1 overflow-y-auto p-4 bg-transparent min-h-0" id="lista-notificacoes">
         <!-- Estado vazio padrão -->
         <div id="notif-vazia" class="flex flex-col items-center justify-center h-full text-slate-400 gap-3 opacity-70">
           <i data-lucide="bell-off" class="w-12 h-12"></i>
@@ -588,12 +727,112 @@
     </div>
   </div>
 
+  <!-- =============================================== -->
+  <!-- MODAL DE NOVA META                              -->
+  <!-- =============================================== -->
+  <div id="modal-meta" role="dialog" aria-modal="true" aria-labelledby="modal-meta-title"
+    class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
+    <div
+      class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-3xl w-full max-w-md shadow-2xl border border-white/50 dark:border-white/10 zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
+      <div
+        class="p-6 text-white flex justify-between items-center bg-slate-800/80 dark:bg-slate-900/80 sticky top-0 z-10 shrink-0 border-b border-white/20 dark:border-white/5 backdrop-blur-md">
+        <h3 id="modal-meta-title" class="text-xl font-bold flex items-center gap-2">
+          <i data-lucide="target" class="w-5 h-5 text-emerald-400"></i> Criar Nova Meta
+        </h3>
+        <button onclick="fecharModalMeta()"
+          class="text-white/80 hover:text-white bg-white/10 p-2 rounded-full transition-colors" aria-label="Fechar">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-meta" class="p-6 space-y-5">
+        <div class="space-y-2">
+          <label for="meta-nome" class="block text-sm font-bold text-slate-700 dark:text-slate-300">Nome do Objetivo</label>
+          <input type="text" id="meta-nome" required placeholder="ex: Enxoval da Agatha"
+            class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100">
+        </div>
+
+        <div class="space-y-2">
+          <label for="meta-alvo" class="block text-sm font-bold text-slate-700 dark:text-slate-300">Valor Alvo (R$)</label>
+          <input type="text" id="meta-alvo" required placeholder="R$ 0,00"
+            class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100">
+        </div>
+
+        <div class="space-y-2">
+          <label for="meta-atual" class="block text-sm font-bold text-slate-700 dark:text-slate-300">Valor Inicial Guardado (R$)</label>
+          <input type="text" id="meta-atual" required placeholder="R$ 0,00"
+            class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100">
+        </div>
+
+        <button type="submit"
+          class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300">
+          Salvar Meta
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =============================================== -->
+  <!-- MODAL DE ATUALIZAR META                         -->
+  <!-- =============================================== -->
+  <div id="modal-atualizar-meta" role="dialog" aria-modal="true" aria-labelledby="modal-update-meta-title"
+    class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden fade-in modal-overlay">
+    <div
+      class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-3xl w-full max-w-md shadow-2xl border border-white/50 dark:border-white/10 zoom-in max-h-[95vh] overflow-y-auto relative flex flex-col">
+      <div
+        class="p-6 text-white flex justify-between items-center bg-slate-800/80 dark:bg-slate-900/80 sticky top-0 z-10 shrink-0 border-b border-white/20 dark:border-white/5 backdrop-blur-md">
+        <h3 id="modal-update-meta-title" class="text-xl font-bold flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-400"></i> Atualizar Valor Guardado
+        </h3>
+        <button onclick="fecharModalAtualizarMeta()"
+          class="text-white/80 hover:text-white bg-white/10 p-2 rounded-full transition-colors" aria-label="Fechar">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-atualizar-meta" class="p-6 space-y-5">
+        <input type="hidden" id="atualizar-meta-id">
+        
+        <div class="space-y-2">
+          <p id="atualizar-meta-nome" class="text-base font-bold text-slate-800 dark:text-slate-100"></p>
+          <p id="atualizar-meta-progresso" class="text-xs text-slate-500 dark:text-slate-400"></p>
+        </div>
+
+        <div class="space-y-2">
+          <label for="meta-novo-valor" class="block text-sm font-bold text-slate-700 dark:text-slate-300">Valor a Adicionar (R$)</label>
+          <input type="text" id="meta-novo-valor" required placeholder="R$ 0,00"
+            class="w-full border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-900/50 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100">
+        </div>
+
+        <button type="submit"
+          class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300">
+          Atualizar Meta
+        </button>
+      </form>
+    </div>
+  </div>
+
 
   <!-- Lucide Icons (local) -->
   <script src="node_modules/lucide/dist/umd/lucide.min.js"></script>
 
+  <!-- jsPDF & jspdf-autotable CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Importmap para o Firebase -->
+  <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+      }
+    }
+  </script>
+
   <!-- SCRIPT PRINCIPAL -->
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 
 </html>

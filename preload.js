@@ -27,4 +27,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ---- Auto-Updater: macOS (GitHub API + browser download) ----
   // Recebe { version, url } quando há update disponível no macOS
   onUpdateAvailableMac: (cb) => ipcRenderer.on('update-available-mac', (_e, info) => cb(info)),
+
+  // ---- Google Auth via BrowserWindow controlada ----
+  googleOAuth: () => ipcRenderer.invoke('google-oauth'),
 });

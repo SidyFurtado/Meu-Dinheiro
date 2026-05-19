@@ -1,8 +1,24 @@
 const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
+const express = require('express');
 
 let mainWindow;
+let expressServer;
+let serverPort = 45678;
+
+async function startLocalServer() {
+  return new Promise((resolve) => {
+    const serverApp = express();
+    serverApp.use(express.static(__dirname));
+    expressServer = serverApp.listen(serverPort, '127.0.0.1', () => {
+      resolve(serverPort);
+    }).on('error', (err) => {
+      serverPort++;
+      expressServer.listen(serverPort, '127.0.0.1');
+    });
+  });
+}
 
 // =============================================
 // IPC HANDLERS
@@ -12,6 +28,43 @@ let mainWindow;
 ipcMain.handle('abrir-url-externa', async (_event, url) => {
   const permitido = /^https:\/\/github\.com\/SidyFurtado\/Meu-Dinheiro\//.test(url);
   if (permitido) await shell.openExternal(url);
+});
+
+// ---- Login com Google via BrowserWindow controlada ----
+// O signInWithPopup não funciona no Electron. Esta abordagem abre uma janela
+// gerenciada pelo processo principal, que captura o resultado do OAuth do Google.
+ipcMain.handle('google-oauth', async () => {
+  return new Promise((resolve, reject) => {
+    const googleAuthUrl = `https://meu-dinheiro-6b1ab.firebaseapp.com/__/auth/handler?providerId=google.com&scopes=profile%20email&eventId=0&sessionId=electron`;
+
+    const authWin = new BrowserWindow({
+      width: 500,
+      height: 640,
+      show: true,
+      modal: true,
+      parent: mainWindow,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+    });
+
+    authWin.loadURL(googleAuthUrl);
+
+    const onNavigate = (_event, url) => {
+      // Quando o Firebase retornar o token via URL de callback
+      if (url.includes('/__/auth/handler') && url.includes('code=')) {
+        authWin.webContents.removeListener('will-redirect', onNavigate);
+        authWin.webContents.removeListener('did-navigate', onNavigate);
+        resolve(url);
+        authWin.close();
+      }
+    };
+
+    authWin.webContents.on('will-redirect', onNavigate);
+    authWin.webContents.on('did-navigate', onNavigate);
+    authWin.on('closed', () => reject(new Error('Login cancelado.')));
+  });
 });
 
 // Instalar atualização baixada (Windows via electron-updater)
@@ -28,45 +81,52 @@ ipcMain.handle('baixar-atualizacao', () => {
 // JANELA PRINCIPAL
 // =============================================
 
-async function migrarDadosAntigos() {
+async function migrarDadosAntigos(appUrl) {
   try {
     const tempWin = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
     
-    // Verifica se já migrou
+    // VERIFICA SE JÁ MIGROU DA V2 (index.html -> app.html) E V3 (file:// -> http://)
     await tempWin.loadFile('app.html');
-    const isMigrated = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("migrated_v2")');
-    if (isMigrated === "true") {
+    const isMigratedV3 = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("migrated_v3")');
+    if (isMigratedV3 === "true") {
       tempWin.close();
       return;
     }
 
-    // Carrega index.html e busca os dados antigos
-    await tempWin.loadFile('index.html');
+    // Busca os dados atuais salvos no protocolo file:// (app.html)
     const transacoes = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("transacoes_app")');
     const investimentos = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("investimentos_app")');
     const meuPerfil = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("meuPerfil")');
     const sobraAutomatica = await tempWin.webContents.executeJavaScript('window.localStorage.getItem("sobraAutomatica")');
 
-    // Volta para app.html e injeta os dados resgatados
-    await tempWin.loadFile('app.html');
+    // Carrega o novo servidor Express (http://) e transfere os dados
+    await tempWin.loadURL(appUrl);
     await tempWin.webContents.executeJavaScript(`
       ${transacoes ? `window.localStorage.setItem("transacoes_app", ${JSON.stringify(transacoes)});` : ''}
       ${investimentos ? `window.localStorage.setItem("investimentos_app", ${JSON.stringify(investimentos)});` : ''}
       ${meuPerfil ? `window.localStorage.setItem("meuPerfil", ${JSON.stringify(meuPerfil)});` : ''}
       ${sobraAutomatica ? `window.localStorage.setItem("sobraAutomatica", ${JSON.stringify(sobraAutomatica)});` : ''}
-      window.localStorage.setItem("migrated_v2", "true");
+      window.localStorage.setItem("migrated_v3", "true");
     `);
     
+    // Marca como migrado na origem antiga para não repetir
+    await tempWin.loadFile('app.html');
+    await tempWin.webContents.executeJavaScript('window.localStorage.setItem("migrated_v3", "true")');
+    
     tempWin.close();
-    console.log('[Migração] Dados antigos restaurados com sucesso.');
+    console.log('[Migração] Dados antigos restaurados para o servidor local com sucesso.');
   } catch (err) {
     console.error('[Migração] Erro ao migrar dados:', err);
   }
 }
 
 async function createWindow() {
+  // Inicia o servidor local
+  const port = await startLocalServer();
+  const appUrl = `http://127.0.0.1:${port}/app.html`;
+
   // Executa a migração antes de abrir o aplicativo principal
-  await migrarDadosAntigos();
+  await migrarDadosAntigos(appUrl);
 
   mainWindow = new BrowserWindow({
     width: 1100,
@@ -85,7 +145,36 @@ async function createWindow() {
     show: false,
   });
 
-  mainWindow.loadFile('app.html');
+  mainWindow.loadURL(appUrl);
+
+
+  // Permite que o Firebase Auth abra o popup de login do Google
+  // O Electron bloqueia janelas novas por padrão; aqui liberamos
+  // apenas popups vindos do domínio do Firebase/Google.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    const isAuthUrl =
+      url.includes('accounts.google.com') ||
+      url.includes('firebaseapp.com/__/auth') ||
+      url.includes('apis.google.com');
+
+    if (isAuthUrl) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          width: 500,
+          height: 640,
+          modal: true,
+          parent: mainWindow,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+          },
+        },
+      };
+    }
+    // Bloqueia qualquer outra janela nova
+    return { action: 'deny' };
+  });
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();

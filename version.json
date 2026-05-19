@@ -1,9 +1,12 @@
 {
-  "version": "2.3.2",
-  "windows": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.3.2/Meu-Dinheiro-Setup-2.3.2.exe",
-  "mac": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v2.3.2/Meu-Dinheiro-2.3.2-universal.dmg",
+  "version": "3.0.0",
+  "windows": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v3.0.0/Meu-Dinheiro-Setup-3.0.0.exe",
+  "mac": "https://github.com/SidyFurtado/Meu-Dinheiro/releases/download/v3.0.0/Meu-Dinheiro-3.0.0-universal.dmg",
   "changelog": [
-    "Resgate de dados: restauramos automaticamente as contas, saldo e categorias de usuários que vieram da versão anterior.",
-    "O update oculto no Mac foi completamente removido; os próximos avisarão de forma explícita na tela."
+    "Design Premium 'Liquid Glass' com Bento Grid e visual futurista.",
+    "Sincronização Cloud (Firestore) e Migração Automática de dados locais.",
+    "Metas e Sonhos com barras de progresso interativas.",
+    "Modo Offline do Firestore ativado para lançar gastos sem internet.",
+    "Exportação de Relatórios Mensais em PDF e correções no Modo Escuro."
   ]
 }

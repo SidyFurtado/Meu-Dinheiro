@@ -3,3 +3,4 @@ instaladores/
 .DS_Store
 releases/
 dist/
+._*

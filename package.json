@@ -1,16 +1,16 @@
 {
   "name": "meu-dinheiro",
-  "version": "2.3.2",
+  "version": "3.0.0",
   "description": "Controle Financeiro Descomplicado — Organize suas finanças com facilidade",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "build:css": "npx tailwindcss -i ./src-styles/input.css -o ./tailwind-output.css --minify",
+    "start": "node node_modules/electron/cli.js .",
+    "build:css": "node node_modules/tailwindcss/lib/cli.js -i ./src-styles/input.css -o ./tailwind-output.css --minify",
     "prebuild": "npm run build:css",
     "prestart": "npm run build:css",
-    "dist": "npm run build:css && electron-builder",
-    "dist:mac": "npm run build:css && electron-builder --mac",
-    "dist:win": "npm run build:css && electron-builder --win"
+    "dist": "npm run build:css && node node_modules/electron-builder/cli.js",
+    "dist:mac": "npm run build:css && node node_modules/electron-builder/cli.js --mac",
+    "dist:win": "npm run build:css && node node_modules/electron-builder/cli.js --win"
   },
   "author": "Meu Dinheiro",
   "license": "MIT",
@@ -21,6 +21,8 @@
   },
   "dependencies": {
     "electron-updater": "^6.8.3",
+    "express": "^5.2.1",
+    "firebase": "^12.13.0",
     "lucide": "^0.460.0"
   },
   "build": {
@@ -52,11 +54,15 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["universal"]
+          "arch": [
+            "universal"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["universal"]
+          "arch": [
+            "universal"
+          ]
         }
       ]
     },
@@ -64,6 +70,7 @@
       "icon": "assets/icon.png",
       "publisherName": "Meu Dinheiro",
       "requestedExecutionLevel": "asInvoker",
+      "asar": false,
       "target": [
         {
           "target": "nsis",

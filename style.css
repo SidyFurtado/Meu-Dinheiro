@@ -22,26 +22,77 @@
 .confirm-delete-bar { animation: fadeIn 0.15s ease-out forwards; }
 
 /* --- Saldo card via data-attribute --- */
-#cartao-saldo { transition: background-color 0.3s ease; }
-#cartao-saldo[data-negativo="true"]  { background-color: #e11d48; }
-#cartao-saldo[data-negativo="false"] { background-color: #1e293b; }
+#cartao-saldo {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+#cartao-saldo[data-negativo="true"] {
+  background-color: rgba(225, 29, 72, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+#cartao-saldo[data-negativo="false"] {
+  background-color: rgba(5, 150, 105, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+.dark #cartao-saldo[data-negativo="true"] {
+  background-color: rgba(225, 29, 72, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.dark #cartao-saldo[data-negativo="false"] {
+  background-color: rgba(4, 120, 87, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
 
 /* --- Modal tipo state via data-attribute --- */
-[data-tipo="income"]  #modal-header { background-color: #059669; }
-[data-tipo="expense"] #modal-header { background-color: #e11d48; }
+[data-tipo="income"]  #modal-header {
+  background-color: rgba(5, 150, 105, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+[data-tipo="expense"] #modal-header {
+  background-color: rgba(225, 29, 72, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
 [data-tipo="income"]  #btn-salvar { background-color: #059669; }
 [data-tipo="income"]  #btn-salvar:hover { background-color: #047857; }
 [data-tipo="expense"] #btn-salvar { background-color: #e11d48; }
 [data-tipo="expense"] #btn-salvar:hover { background-color: #be123c; }
 
 [data-tipo="income"] #btn-tipo-entrada {
-  background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); color: #059669;
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  color: #059669;
 }
 [data-tipo="income"]  #btn-tipo-saida   { background-color: transparent; box-shadow: none; color: #64748b; }
 [data-tipo="expense"] #btn-tipo-saida   {
-  background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); color: #e11d48;
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  color: #e11d48;
 }
 [data-tipo="expense"] #btn-tipo-entrada { background-color: transparent; box-shadow: none; color: #64748b; }
+
+/* Overrides para Modo Escuro */
+.dark [data-tipo="income"] #btn-tipo-entrada {
+  background-color: rgba(30, 41, 59, 0.6); /* slate-800/60 */
+  color: #34d399; /* emerald-400 */
+}
+.dark [data-tipo="income"] #btn-tipo-saida {
+  color: #94a3b8; /* slate-400 */
+}
+.dark [data-tipo="expense"] #btn-tipo-saida {
+  background-color: rgba(30, 41, 59, 0.6); /* slate-800/60 */
+  color: #f87171; /* rose-400 */
+}
+.dark [data-tipo="expense"] #btn-tipo-entrada {
+  color: #94a3b8; /* slate-400 */
+}
+
 
 /* =============================================
    CORREÇÕES DE SCROLL — Bug fix crítico
@@ -70,7 +121,9 @@ body {
 #modal-historico  > div > div:first-child,
 #modal-perfil     > div > div:first-child,
 #modal-cadastro   > div > div:first-child,
-#modal-investimento > div > div:first-child {
+#modal-investimento > div > div:first-child,
+#modal-meta       > div > div:first-child,
+#modal-atualizar-meta > div > div:first-child {
   flex-shrink: 0;
 }
 
