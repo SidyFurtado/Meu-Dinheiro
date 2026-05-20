@@ -123,7 +123,7 @@ async function migrarDadosAntigos(appUrl) {
 async function createWindow() {
   // Inicia o servidor local
   const port = await startLocalServer();
-  const appUrl = `http://localhost:${port}/app.html`;
+  const appUrl = `http://127.0.0.1:${port}/app.html`;
 
   // Executa a migração antes de abrir o aplicativo principal
   await migrarDadosAntigos(appUrl);
@@ -143,6 +143,18 @@ async function createWindow() {
     trafficLightPosition: { x: 15, y: 18 },
     backgroundColor: '#059669',
     show: false,
+  });
+
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    if (details.responseHeaders['cross-origin-opener-policy'] || details.responseHeaders['Cross-Origin-Opener-Policy']) {
+      delete details.responseHeaders['cross-origin-opener-policy'];
+      delete details.responseHeaders['Cross-Origin-Opener-Policy'];
+    }
+    if (details.responseHeaders['cross-origin-embedder-policy'] || details.responseHeaders['Cross-Origin-Embedder-Policy']) {
+      delete details.responseHeaders['cross-origin-embedder-policy'];
+      delete details.responseHeaders['Cross-Origin-Embedder-Policy'];
+    }
+    callback({ cancel: false, responseHeaders: details.responseHeaders });
   });
 
   mainWindow.loadURL(appUrl);
