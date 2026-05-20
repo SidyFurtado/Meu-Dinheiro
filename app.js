@@ -25,16 +25,35 @@ const mesesCurtos = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Se
 let transacoes = [];
 let investimentos = [];
 let metas = [];
-let meuPerfil = JSON.parse(localStorage.getItem('meuPerfil')) || { nome: 'Usuário', foto: null, telefone: '' };
+
+let meuPerfil = { nome: 'Usuário', foto: null, telefone: '' };
+try {
+  const localPerfil = localStorage.getItem('meuPerfil');
+  if (localPerfil) meuPerfil = JSON.parse(localPerfil) || meuPerfil;
+} catch (e) {
+  console.error("Erro ao ler meuPerfil do localStorage:", e);
+}
+
 let avatarBase64Temporario = null;
 let idTransacaoEmEdicao = null;
 let idInvestimentoEmEdicao = null;
 
 // --- CONFIGURAÇÃO: SOBRA AUTOMÁTICA ---
-let sobraAutomaticaAtiva = JSON.parse(localStorage.getItem('sobraAutomatica') ?? 'true');
+let sobraAutomaticaAtiva = true;
+try {
+  const localSobra = localStorage.getItem('sobraAutomatica');
+  if (localSobra !== null) sobraAutomaticaAtiva = JSON.parse(localSobra);
+} catch (e) {
+  console.error("Erro ao ler sobraAutomatica do localStorage:", e);
+}
 
 // --- CONFIGURAÇÃO: MODO ESCURO ---
-let darkModeAtivo = localStorage.getItem('theme') === 'dark';
+let darkModeAtivo = false;
+try {
+  darkModeAtivo = localStorage.getItem('theme') === 'dark';
+} catch (e) {
+  console.error("Erro ao ler theme do localStorage:", e);
+}
 
 window.toggleModoEscuro = () => {
   darkModeAtivo = !darkModeAtivo;
@@ -2089,4 +2108,6 @@ window.exportarRelatorioPDF = () => {
 // Adiciona event listeners para os formulários de metas
 document.getElementById('form-meta').addEventListener('submit', salvarMeta);
 document.getElementById('form-atualizar-meta').addEventListener('submit', salvarAtualizacaoMeta);
+
+console.log('app.js: Carregado e inicializado com sucesso até o fim!');
 
