@@ -44,6 +44,7 @@
       "app.html",
       "style.css",
       "app.js",
+      "firebase-config.js",
       "tailwind-output.css",
       "assets/**/*",
       "node_modules/lucide/**/*"
