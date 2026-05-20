@@ -123,7 +123,7 @@ async function migrarDadosAntigos(appUrl) {
 async function createWindow() {
   // Inicia o servidor local
   const port = await startLocalServer();
-  const appUrl = `http://127.0.0.1:${port}/app.html`;
+  const appUrl = `http://localhost:${port}/app.html`;
 
   // Executa a migração antes de abrir o aplicativo principal
   await migrarDadosAntigos(appUrl);
