@@ -1,6 +1,6 @@
 {
   "name": "meu-dinheiro",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Controle Financeiro Descomplicado — Organize suas finanças com facilidade",
   "main": "main.js",
   "scripts": {
